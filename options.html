@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>History domain filter</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#129529;</text></svg>" />
+    <style>
+      :root {
+        --bg: #12151c;
+        --panel: #1b1f29;
+        --ink: #e7e9ee;
+        --muted: #9aa3b2;
+        --accent: #7fd1c9;
+        --line: #2a3040;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 20% -10%, #1d2430 0%, var(--bg) 60%);
+        color: var(--ink);
+        font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+        display: flex;
+        justify-content: center;
+        padding: 48px 20px;
+      }
+      main { width: 100%; max-width: 620px; }
+      h1 {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 20px;
+        letter-spacing: 0.02em;
+        margin: 0 0 6px;
+      }
+      p.sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; line-height: 1.5; }
+      label {
+        display: block;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 260px;
+        resize: vertical;
+        background: var(--panel);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      textarea:focus { outline: none; border-color: var(--accent); }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 16px;
+      }
+      button {
+        background: var(--accent);
+        color: #0b0e13;
+        border: none;
+        border-radius: 8px;
+        padding: 11px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:hover { filter: brightness(1.08); }
+      #status { color: var(--accent); font-size: 13px; min-height: 18px; }
+      code { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>History domain filter</h1>
+      <p class="sub">
+        One domain per line. Each domain and all of its pages and subdomains are
+        wiped from history the instant they are visited. Example:
+        <code>reddit.com</code> also covers <code>old.reddit.com/r/anything</code>.
+        Saving also clears any matching history already recorded.
+      </p>
+      <label for="domains">Blocked domains</label>
+      <textarea id="domains" spellcheck="false" placeholder="example.com&#10;anothersite.org"></textarea>
+      <div class="row">
+        <button id="save">Save</button>
+        <span id="status"></span>
+      </div>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

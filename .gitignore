@@ -1,0 +1,25 @@
+# Packaged store bundles (produced at submission time, not source)
+*.zip
+dist/
+build/
+
+# Listing assets are large binaries; keep source separate if they grow
+# store/screenshots/*.psd
+
+# OS and editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
+
+# Node, only if build tooling is added later (currently zero-build)
+node_modules/
+npm-debug.log*
+package-lock.json.bak
+
+# Internal working notes - kept local, never published
+PLAN.md
+REVIEW.md

@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "History domain filter",
+  "version": "1.0",
+  "description": "Automatically removes chosen domains (and all their pages) from Edge browsing history.",
+  "permissions": ["history", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}

@@ -1,0 +1,11 @@
+# Normalize all text files to LF in the repository, regardless of each
+# machine's core.autocrlf setting. Keeps diffs clean across the Mac and Windows
+# boxes and makes the packaged extension bytes deterministic.
+* text=auto eol=lf
+
+# Treat binary listing assets as binary so git never touches their bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
