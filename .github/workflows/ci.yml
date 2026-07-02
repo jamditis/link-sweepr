@@ -19,10 +19,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Syntax-check service worker and options script
+      - name: Syntax-check service worker, shared module, and page scripts
         run: |
           node --check background.js
+          node --check domain.js
           node --check options.js
+          node --check popup.js
 
       - name: Run unit tests
         run: npm test
@@ -32,8 +34,9 @@ jobs:
 
       - name: Assemble extension bundle
         run: |
-          mkdir -p dist/ext
-          cp manifest.json background.js options.html options.js dist/ext/
+          mkdir -p dist/ext/icons
+          cp manifest.json background.js domain.js options.html options.js popup.html popup.js dist/ext/
+          cp icons/*.png dist/ext/icons/
 
       - name: Lint extension (Chrome and Edge relevant errors only)
         run: node scripts/check-lint.mjs dist/ext

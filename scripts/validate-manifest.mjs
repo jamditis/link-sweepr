@@ -1,6 +1,6 @@
 // Validates manifest.json invariants with no dependencies.
 // Run: node scripts/validate-manifest.mjs
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 let manifest;
 try {
@@ -43,6 +43,28 @@ for (const permission of required) {
       manifest.permissions.includes(permission),
     `missing required permission: ${permission}`
   );
+}
+
+// Both stores require a 128px icon for the listing.
+check(
+  manifest.icons && typeof manifest.icons["128"] === "string",
+  "icons.128 is required for store submission"
+);
+
+// Every file the manifest points at must exist, so a packaged build is never
+// missing an asset (a common cause of store-submission rejection).
+const referenced = new Set();
+if (manifest.background?.service_worker)
+  referenced.add(manifest.background.service_worker);
+if (manifest.options_ui?.page) referenced.add(manifest.options_ui.page);
+if (manifest.action?.default_popup) referenced.add(manifest.action.default_popup);
+for (const iconMap of [manifest.icons, manifest.action?.default_icon]) {
+  if (iconMap && typeof iconMap === "object") {
+    for (const path of Object.values(iconMap)) referenced.add(path);
+  }
+}
+for (const file of referenced) {
+  check(existsSync(file), `referenced file is missing: ${file}`);
 }
 
 if (errors.length) {

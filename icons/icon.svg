@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="History domain filter">
+  <!-- Self-contained tile so the mark stays legible on any toolbar background. -->
+  <rect x="4" y="4" width="120" height="120" rx="24" fill="#12151c"/>
+
+  <!-- Debris swept off the bristle tips; kept large so it does not vanish small. -->
+  <circle cx="92" cy="94" r="6" fill="#9aa3b2" opacity="0.85"/>
+  <circle cx="108" cy="86" r="3.6" fill="#9aa3b2" opacity="0.5"/>
+
+  <!-- Bristle head: one solid fan, sized to fill the tile so it survives 16px. -->
+  <path d="M52 72 L26 108 Q54 119 82 98 Z" fill="#a7e3dc"/>
+  <!-- Grooves only read at larger sizes; carved in the tile color. -->
+  <g stroke="#12151c" stroke-width="3" stroke-linecap="round" opacity="0.55">
+    <path d="M49 79 L38 104"/>
+    <path d="M56 80 L55 109"/>
+    <path d="M63 79 L71 102"/>
+  </g>
+
+  <!-- Handle: a single thick round-capped stroke reads cleanly when small. -->
+  <line x1="100" y1="22" x2="54" y2="73" stroke="#7fd1c9" stroke-width="11" stroke-linecap="round"/>
+  <!-- Binding where handle meets head. -->
+  <line x1="45" y1="66" x2="63" y2="79" stroke="#12151c" stroke-width="7" stroke-linecap="round"/>
+</svg>
