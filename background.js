@@ -19,6 +19,13 @@ const SWEEP_ALARM = "history-filter-resweep";
 const SWEEP_PERIOD_MINUTES = 30;
 const SEARCH_PAGE_SIZE = 1000;
 
+// Upper bound for the first history query. history.search excludes rows at or
+// after endTime, and a visit can carry a future lastVisitTime (system clock
+// correction, or history imported or synced from another machine), so the
+// window must start above any real timestamp rather than at the wall clock.
+// This is the maximum ECMAScript time value; no visit can exceed it.
+const MAX_HISTORY_TIME = 8640000000000000;
+
 // Normalize a user-entered pattern to a lowercase ASCII (punycode) host.
 // Routes the value through the URL parser so "https://www.Exämple.com/x" becomes
 // the canonical "xn--exmple-cua.com" form used in the history database, then
@@ -107,7 +114,7 @@ async function sweep(domainsInput) {
 // reaches past the collision, so no rows are lost.
 async function sweepDomain(domain, domains) {
   const seen = new Set();
-  let endTime = Date.now() + 1;
+  let endTime = MAX_HISTORY_TIME;
   let pageSize = SEARCH_PAGE_SIZE;
 
   // Guard against a pathological loop if many rows share one timestamp.

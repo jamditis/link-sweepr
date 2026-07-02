@@ -150,6 +150,29 @@ test("sweep drains a same-timestamp collision larger than one page", async () =>
   );
 });
 
+test("sweep deletes future-dated history rows", async () => {
+  // A visit timestamped in the future (clock skew or imported history) sorts to
+  // the top of history. Capping the first page at the wall clock would never
+  // reach it, so the sweep must start from the maximum time value.
+  const FUTURE = 4102444800000; // 2100-01-01, safely beyond any real "now"
+  const { deleted, remaining } = historyStore([
+    { id: 1, url: "https://example.com/future", lastVisitTime: FUTURE },
+    { id: 2, url: "https://example.com/past", lastVisitTime: 1000 },
+    { id: 3, url: "https://example.org/", lastVisitTime: 2000 },
+  ]);
+
+  await bg.sweep(["example.com"]);
+
+  assert.deepEqual(deleted.slice().sort(), [
+    "https://example.com/future",
+    "https://example.com/past",
+  ]);
+  assert.deepEqual(
+    remaining().map((it) => it.url),
+    ["https://example.org/"]
+  );
+});
+
 test("sweep normalizes raw domain shapes before searching", async () => {
   // A caller may pass an unnormalized shape (scheme + wildcard). sweep must
   // reduce it to the bare host, or the text search and host match find nothing.
