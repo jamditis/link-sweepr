@@ -84,8 +84,7 @@ blockBtn.addEventListener("click", async () => {
   setTimeout(() => (statusEl.textContent = ""), 2500);
 });
 
-el("manage").addEventListener("click", (event) => {
-  event.preventDefault();
+el("manage").addEventListener("click", () => {
   chrome.runtime.openOptionsPage();
   window.close();
 });

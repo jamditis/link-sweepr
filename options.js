@@ -73,10 +73,15 @@ function save() {
   return saveQueue;
 }
 
-// Ask the service worker to clear existing history for the current list. Cheap
-// and idempotent; the worker reads the freshly saved list itself.
+// Ask the service worker to clear existing history for the current list. Routed
+// through the same queue as save() so the token always lands after the pending
+// list writes; the worker then reads the up-to-date list rather than a stale one.
+// Cheap and idempotent; the returned promise resolves once the token is written.
 function requestSweep() {
-  return chrome.storage.local.set({ [SWEEP_REQUEST_KEY]: Date.now() });
+  saveQueue = saveQueue.then(() =>
+    chrome.storage.local.set({ [SWEEP_REQUEST_KEY]: Date.now() }).catch(() => {})
+  );
+  return saveQueue;
 }
 
 // Debounce the sweep request (not the save): the list is already saved on every
@@ -102,10 +107,10 @@ function flushPendingSweep() {
   }
 }
 
-async function onInput() {
+function onInput() {
   renderPreview();
-  await save();
-  scheduleSweep();
+  save(); // queued, ordered write; not awaited so the sweep timer is set this tick
+  scheduleSweep(); // set synchronously so a hide-flush always has a pending request
 }
 
 function exportList() {
