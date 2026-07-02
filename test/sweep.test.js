@@ -149,3 +149,62 @@ test("sweep drains a same-timestamp collision larger than one page", async () =>
     ["https://another.test/", "https://keep.test/"]
   );
 });
+
+test("sweep normalizes raw domain shapes before searching", async () => {
+  // A caller may pass an unnormalized shape (scheme + wildcard). sweep must
+  // reduce it to the bare host, or the text search and host match find nothing.
+  const { deleted, remaining } = historyStore([
+    { id: 1, url: "https://example.com/", lastVisitTime: 3000 },
+    { id: 2, url: "https://sub.example.com/x", lastVisitTime: 2000 },
+    { id: 3, url: "https://example.org/", lastVisitTime: 1000 },
+  ]);
+
+  await bg.sweep(["https://*.example.com"]);
+
+  assert.deepEqual(deleted.slice().sort(), [
+    "https://example.com/",
+    "https://sub.example.com/x",
+  ]);
+  assert.deepEqual(
+    remaining().map((it) => it.url),
+    ["https://example.org/"]
+  );
+});
+
+test("sweepDomain ignores a non-numeric lastVisitTime when paging", async () => {
+  // A row reporting no lastVisitTime sits inside a full first page; more rows
+  // sit below it. Treating the missing time as 0 would collapse the window and
+  // skip the lower rows, so paging must ignore non-numeric times for the window
+  // while still deleting the row itself. `sortKey` is the mock's own ordering;
+  // the returned row keeps its real (here missing) lastVisitTime.
+  const rows = [];
+  for (let i = 1; i <= 999; i++) {
+    rows.push({ id: i, sortKey: 5000, url: `https://example.com/a${i}`, lastVisitTime: 5000 });
+  }
+  rows.push({ id: 1000, sortKey: 5000, url: "https://example.com/missing" }); // no lastVisitTime
+  for (let i = 1; i <= 10; i++) {
+    rows.push({ id: 1000 + i, sortKey: 4000, url: `https://example.com/b${i}`, lastVisitTime: 4000 });
+  }
+
+  let store = rows.slice();
+  const deleted = new Set();
+  global.chrome.history.search = async ({ startTime = 0, endTime = Infinity, maxResults = 100 }) => {
+    return store
+      .filter((r) => r.sortKey >= startTime && r.sortKey < endTime)
+      .sort((a, b) => b.sortKey - a.sortKey || a.id - b.id)
+      .slice(0, maxResults)
+      .map((r) => ({ id: r.id, url: r.url, lastVisitTime: r.lastVisitTime }));
+  };
+  global.chrome.history.deleteUrl = async ({ url }) => {
+    deleted.add(url);
+    store = store.filter((r) => r.url !== url);
+  };
+
+  await bg.sweepDomain("example.com", ["example.com"]);
+
+  assert.equal(deleted.size, 1010, `expected 1010 deletions, got ${deleted.size}`);
+  assert.ok(
+    deleted.has("https://example.com/b10"),
+    "rows below the missing-timestamp row must still be deleted"
+  );
+});
