@@ -85,7 +85,8 @@ async function deleteUrlIfBlocked(url, domains) {
 // search for "reddit.com" also returns "notreddit.com"). Text search never
 // misses a true match, because any host ending in the domain contains it.
 async function sweep(domainsInput) {
-  const domains = domainsInput || (await getNormalizedDomains());
+  const raw = domainsInput || (await getNormalizedDomains());
+  const domains = raw.map(normalizeDomain).filter(Boolean);
   if (!domains.length) return;
   for (const domain of domains) {
     try {
