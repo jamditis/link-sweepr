@@ -1,0 +1,151 @@
+// Unit tests for the history filter's core logic: domain normalization, host
+// matching, and the paginated sweep. A chrome.history mock is installed on the
+// global before the service worker is required, so the real background.js code
+// under test runs unchanged.
+const test = require("node:test");
+const assert = require("node:assert/strict");
+
+// The service worker registers listeners against chrome.* at load, so a mock
+// must exist before it is required. These stubs are no-ops; the history methods
+// are replaced per test by historyStore().
+const noop = () => {};
+global.chrome = {
+  history: {
+    onVisited: { addListener: noop },
+    search: async () => [],
+    deleteUrl: async () => {},
+  },
+  webNavigation: {
+    onHistoryStateUpdated: { addListener: noop },
+    onReferenceFragmentUpdated: { addListener: noop },
+  },
+  runtime: {
+    onInstalled: { addListener: noop },
+    onStartup: { addListener: noop },
+  },
+  storage: {
+    local: { get: async () => ({}) },
+    onChanged: { addListener: noop },
+  },
+  alarms: { create: noop, onAlarm: { addListener: noop } },
+};
+
+const bg = require("../background.js");
+
+// Back the chrome.history mock with a mutable item store. search honors the real
+// contract: results in the [startTime, endTime) window whose url or title
+// contains the text, newest first (id ascending as a stable tiebreak), capped at
+// maxResults. deleteUrl removes every visit to that url, as Chrome does, and
+// records it so a test can assert exactly what was deleted.
+function historyStore(items) {
+  let store = items.map((it) => ({ title: "", ...it }));
+  const deleted = [];
+  global.chrome.history.search = async ({
+    text = "",
+    startTime = 0,
+    endTime = Infinity,
+    maxResults = 100,
+  }) => {
+    const needle = text.toLowerCase();
+    return store
+      .filter((it) => it.lastVisitTime >= startTime && it.lastVisitTime < endTime)
+      .filter(
+        (it) =>
+          needle === "" || (it.url + " " + it.title).toLowerCase().includes(needle)
+      )
+      .sort((a, b) => b.lastVisitTime - a.lastVisitTime || a.id - b.id)
+      .slice(0, maxResults)
+      .map((it) => ({
+        id: it.id,
+        url: it.url,
+        lastVisitTime: it.lastVisitTime,
+        title: it.title,
+      }));
+  };
+  global.chrome.history.deleteUrl = async ({ url }) => {
+    deleted.push(url);
+    store = store.filter((it) => it.url !== url);
+  };
+  return { deleted, remaining: () => store };
+}
+
+test("normalizeDomain collapses every input shape to the bare host", () => {
+  const cases = [
+    ["https://*.example.com", "example.com"], // scheme + wildcard (the 5.5 bug)
+    ["https://.example.com", "example.com"], // scheme + leading dot
+    ["http://*.example.com", "example.com"],
+    ["*.example.com", "example.com"],
+    [".example.com", "example.com"],
+    ["https://www.Example.com/path?q=1", "example.com"],
+    ["reddit.com", "reddit.com"],
+    ["OLD.Reddit.com", "old.reddit.com"], // subdomains preserved
+    ["exämple.com", "xn--exmple-cua.com"], // Unicode to punycode
+    ["https://www.xn--exmple-cua.com", "xn--exmple-cua.com"], // already punycode
+    ["   ", ""],
+  ];
+  for (const [input, want] of cases) {
+    assert.equal(
+      bg.normalizeDomain(input),
+      want,
+      `normalizeDomain(${JSON.stringify(input)})`
+    );
+  }
+});
+
+test("urlIsBlocked matches host, subdomains and paths but not lookalikes", () => {
+  const domains = ["reddit.com"];
+  assert.equal(bg.urlIsBlocked("https://reddit.com/", domains), true);
+  assert.equal(bg.urlIsBlocked("https://reddit.com/r/x?y=1", domains), true);
+  assert.equal(bg.urlIsBlocked("https://old.reddit.com/r/x", domains), true);
+  assert.equal(bg.urlIsBlocked("https://notreddit.com/", domains), false);
+  assert.equal(bg.urlIsBlocked("https://reddit.com.evil.test/", domains), false);
+  assert.equal(bg.urlIsBlocked("not a url", domains), false);
+});
+
+test("sweep deletes matching history and leaves everything else", async () => {
+  const { deleted, remaining } = historyStore([
+    { id: 1, url: "https://reddit.com/", lastVisitTime: 5000 },
+    { id: 2, url: "https://old.reddit.com/r/x", lastVisitTime: 4000 },
+    { id: 3, url: "https://reddit.com/r/y?z=1", lastVisitTime: 3000 },
+    { id: 4, url: "https://notreddit.com/", lastVisitTime: 2500 }, // text hit, host no
+    { id: 5, url: "https://example.org/reddit.com", lastVisitTime: 2000 }, // path hit, host no
+    { id: 6, url: "https://example.org/", lastVisitTime: 1000 },
+  ]);
+
+  await bg.sweep(["reddit.com"]);
+
+  assert.deepEqual(deleted.slice().sort(), [
+    "https://old.reddit.com/r/x",
+    "https://reddit.com/",
+    "https://reddit.com/r/y?z=1",
+  ]);
+  assert.deepEqual(
+    remaining()
+      .map((it) => it.url)
+      .sort(),
+    ["https://example.org/", "https://example.org/reddit.com", "https://notreddit.com/"]
+  );
+});
+
+test("sweep drains a same-timestamp collision larger than one page", async () => {
+  const N = 2500; // greater than the 1000-row page size
+  const items = [];
+  for (let i = 1; i <= N; i++) {
+    items.push({ id: i, url: `https://example.com/${i}`, lastVisitTime: 1000 });
+  }
+  // Unrelated rows that must survive, including one sharing the timestamp.
+  items.push({ id: N + 1, url: "https://keep.test/", lastVisitTime: 1000 });
+  items.push({ id: N + 2, url: "https://another.test/", lastVisitTime: 900 });
+
+  const { deleted, remaining } = historyStore(items);
+
+  await bg.sweep(["example.com"]);
+
+  assert.equal(deleted.length, N, `expected ${N} deletions, got ${deleted.length}`);
+  assert.deepEqual(
+    remaining()
+      .map((it) => it.url)
+      .sort(),
+    ["https://another.test/", "https://keep.test/"]
+  );
+});
