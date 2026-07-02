@@ -123,7 +123,7 @@ async function sweepDomain(domain, domains) {
     let oldest = Infinity;
     for (const item of batch) {
       const visitTime =
-        typeof item.lastVisitTime === "number" ? item.lastVisitTime : 0;
+        typeof item.lastVisitTime === "number" ? item.lastVisitTime : Infinity;
       if (visitTime < oldest) oldest = visitTime;
 
       if (item.id !== undefined) {
@@ -138,6 +138,8 @@ async function sweepDomain(domain, domains) {
         }
       }
     }
+
+    if (!Number.isFinite(oldest)) break;
 
     // A short page means every row mentioning this domain up to endTime is in.
     if (batch.length < pageSize) break;
