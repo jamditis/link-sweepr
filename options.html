@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>History domain filter</title>
+    <title>LinkSweepr</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#129529;</text></svg>" />
     <style>
       :root {
@@ -13,6 +13,7 @@
         --muted: #9aa3b2;
         --accent: #7fd1c9;
         --line: #2a3040;
+        --warn: #e0a458;
       }
       * { box-sizing: border-box; }
       body {
@@ -42,7 +43,7 @@
       }
       textarea {
         width: 100%;
-        min-height: 260px;
+        min-height: 220px;
         resize: vertical;
         background: var(--panel);
         color: var(--ink);
@@ -54,43 +55,82 @@
         line-height: 1.7;
       }
       textarea:focus { outline: none; border-color: var(--accent); }
-      .row {
+      .preview { margin-top: 16px; }
+      .preview-count { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+      .preview-count b { color: var(--ink); font-weight: 600; }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chip {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 3px 8px;
+        color: var(--ink);
+      }
+      .warn { color: var(--warn); font-size: 12px; margin: 10px 0 0; line-height: 1.5; }
+      .toolbar {
         display: flex;
         align-items: center;
-        gap: 14px;
-        margin-top: 16px;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
       }
       button {
-        background: var(--accent);
-        color: #0b0e13;
-        border: none;
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--line);
         border-radius: 8px;
-        padding: 11px 20px;
+        padding: 9px 16px;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 13px;
         cursor: pointer;
       }
-      button:hover { filter: brightness(1.08); }
-      #status { color: var(--accent); font-size: 13px; min-height: 18px; }
+      button:hover { border-color: var(--accent); }
+      #status { color: var(--accent); font-size: 13px; min-height: 18px; margin-left: auto; text-align: right; }
+      .privacy {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+        margin: 28px 0 0;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
       code { color: var(--accent); }
     </style>
   </head>
   <body>
     <main>
-      <h1>History domain filter</h1>
+      <h1>LinkSweepr</h1>
       <p class="sub">
         One domain per line. Each domain and all of its pages and subdomains are
         wiped from history the instant they are visited. Example:
         <code>reddit.com</code> also covers <code>old.reddit.com/r/anything</code>.
-        Saving also clears any matching history already recorded.
+        Changes save automatically and clear any matching history already recorded.
       </p>
       <label for="domains">Blocked domains</label>
       <textarea id="domains" spellcheck="false" placeholder="example.com&#10;anothersite.org"></textarea>
-      <div class="row">
-        <button id="save">Save</button>
+
+      <div class="preview">
+        <p class="preview-count"><b id="count">0</b> <span id="count-label">domains filtered</span></p>
+        <div class="chips" id="chips"></div>
+        <p class="warn" id="warn" hidden></p>
+      </div>
+
+      <div class="toolbar">
+        <button id="export" type="button">Export list</button>
+        <button id="import" type="button">Import list</button>
+        <input id="file" type="file" accept=".txt,text/plain" hidden />
         <span id="status"></span>
       </div>
+
+      <p class="privacy">
+        Everything runs on this device. The domain list is stored only in your
+        browser's local extension storage, and nothing is ever sent to any server
+        or third party.
+      </p>
     </main>
+    <script src="domain.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

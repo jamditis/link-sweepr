@@ -9,6 +9,9 @@ const assert = require("node:assert/strict");
 // must exist before it is required. These stubs are no-ops; the history methods
 // are replaced per test by historyStore().
 const noop = () => {};
+// Capture the worker's storage.onChanged listeners so a test can drive them and
+// assert which key triggers a sweep.
+const onChangedListeners = [];
 global.chrome = {
   history: {
     onVisited: { addListener: noop },
@@ -25,10 +28,16 @@ global.chrome = {
   },
   storage: {
     local: { get: async () => ({}) },
-    onChanged: { addListener: noop },
+    onChanged: { addListener: (fn) => onChangedListeners.push(fn) },
   },
   alarms: { create: noop, onAlarm: { addListener: noop } },
 };
+
+// The service worker pulls its domain helpers in with importScripts("domain.js").
+// Node has no importScripts, so load that module's exports onto the global (where
+// the worker reaches them) and stub the call to a no-op before requiring it.
+Object.assign(global, require("../domain.js"));
+global.importScripts = () => {};
 
 const bg = require("../background.js");
 
@@ -81,7 +90,15 @@ test("normalizeDomain collapses every input shape to the bare host", () => {
     ["OLD.Reddit.com", "old.reddit.com"], // subdomains preserved
     ["exämple.com", "xn--exmple-cua.com"], // Unicode to punycode
     ["https://www.xn--exmple-cua.com", "xn--exmple-cua.com"], // already punycode
+    ["under_score.com", "under_score.com"], // underscore host is kept
+    ["[::1]", "[::1]"], // IPv6 loopback literal, kept bracketed
+    ["http://[2001:db8::1]/path", "[2001:db8::1]"], // IPv6 literal with scheme/path
     ["   ", ""],
+    // Chromium percent-encodes spaces into the host rather than throwing the way
+    // Node does; the charset gate rejects the result in both runtimes.
+    ["not a domain", ""],
+    ["a b.com", ""],
+    ["http:// bad", ""],
   ];
   for (const [input, want] of cases) {
     assert.equal(
@@ -100,6 +117,11 @@ test("urlIsBlocked matches host, subdomains and paths but not lookalikes", () =>
   assert.equal(bg.urlIsBlocked("https://notreddit.com/", domains), false);
   assert.equal(bg.urlIsBlocked("https://reddit.com.evil.test/", domains), false);
   assert.equal(bg.urlIsBlocked("not a url", domains), false);
+
+  // IPv6 literal hosts are matched exactly (no subdomain notion).
+  assert.equal(bg.urlIsBlocked("http://[::1]/dash", ["[::1]"]), true);
+  assert.equal(bg.urlIsBlocked("http://[2001:db8::1]/", ["[2001:db8::1]"]), true);
+  assert.equal(bg.urlIsBlocked("http://[2001:db8::2]/", ["[2001:db8::1]"]), false);
 });
 
 test("sweep deletes matching history and leaves everything else", async () => {
@@ -230,4 +252,28 @@ test("sweepDomain ignores a non-numeric lastVisitTime when paging", async () => 
     deleted.has("https://example.com/b10"),
     "rows below the missing-timestamp row must still be deleted"
   );
+});
+
+test("only a sweepRequest change sweeps; a list write alone does not", async () => {
+  // The list is saved on every keystroke, so a list change must not sweep (it
+  // would rescan history on every partial edit). The UI writes sweepRequest once
+  // the list settles, and only that triggers the existing-history sweep.
+  const { deleted } = historyStore([
+    { id: 1, url: "https://reddit.com/", lastVisitTime: 3000 },
+    { id: 2, url: "https://example.org/", lastVisitTime: 2000 },
+  ]);
+  // The worker reads the current list from storage when it sweeps.
+  global.chrome.storage.local.get = async () => ({ blockedDomains: ["reddit.com"] });
+
+  const fire = (changes) =>
+    Promise.all(onChangedListeners.map((fn) => fn(changes, "local")));
+
+  await fire({ blockedDomains: { newValue: ["reddit.com"] } });
+  assert.deepEqual(deleted, [], "a list-only change must not sweep");
+
+  await fire({ sweepRequest: { newValue: 1 } });
+  assert.deepEqual(deleted, ["https://reddit.com/"], "a sweepRequest change sweeps");
+
+  // Restore the default so later tests are unaffected.
+  global.chrome.storage.local.get = async () => ({});
 });

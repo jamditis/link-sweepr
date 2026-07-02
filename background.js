@@ -13,8 +13,20 @@
 //      and webNavigation.onReferenceFragmentUpdated for #fragment changes
 //   3. a periodic alarm + startup/install/list-change sweeps - a backstop that
 //      clears anything a wake race missed, and existing history for new domains.
+//
+// Domain normalization and matching live in domain.js, shared with the options
+// and popup pages so their preview and block action agree with the sweep.
+
+importScripts("domain.js");
 
 const STORAGE_KEY = "blockedDomains";
+// A separate key the UI writes to request an existing-history sweep. The list
+// (STORAGE_KEY) is written on every keystroke so no edit is lost, but sweeping on
+// each partial edit would rescan all history repeatedly (a text search for "r"
+// matches nearly every row). So the list write does not trigger a sweep; the UI
+// writes this token once the list settles, and the worker sweeps on it with an
+// await, which keeps the worker alive until the sweep finishes.
+const SWEEP_REQUEST_KEY = "sweepRequest";
 const SWEEP_ALARM = "history-filter-resweep";
 const SWEEP_PERIOD_MINUTES = 30;
 const SEARCH_PAGE_SIZE = 1000;
@@ -26,27 +38,6 @@ const SEARCH_PAGE_SIZE = 1000;
 // This is the maximum ECMAScript time value; no visit can exceed it.
 const MAX_HISTORY_TIME = 8640000000000000;
 
-// Normalize a user-entered pattern to a lowercase ASCII (punycode) host.
-// Routes the value through the URL parser so "https://www.Exämple.com/x" becomes
-// the canonical "xn--exmple-cua.com" form used in the history database, then
-// strips a leading "*." or "." wildcard and "www." from the parsed host. The
-// strips run after parsing so a schemed input like "https://*.example.com" is
-// reduced to "example.com" rather than leaving the wildcard on the host.
-function normalizeDomain(input) {
-  const value = String(input).trim().toLowerCase();
-  if (!value) return "";
-  let host;
-  try {
-    host = new URL(value.includes("://") ? value : "http://" + value).hostname;
-  } catch {
-    return "";
-  }
-  return host
-    .replace(/^\*\./, "")
-    .replace(/^\./, "")
-    .replace(/^www\./, "");
-}
-
 async function getNormalizedDomains() {
   let stored;
   try {
@@ -56,20 +47,6 @@ async function getNormalizedDomains() {
   }
   const list = Array.isArray(stored[STORAGE_KEY]) ? stored[STORAGE_KEY] : [];
   return list.map(normalizeDomain).filter(Boolean);
-}
-
-function hostMatchesDomain(host, domain) {
-  return host === domain || host.endsWith("." + domain);
-}
-
-function urlIsBlocked(url, domains) {
-  let host;
-  try {
-    host = new URL(url).hostname.toLowerCase();
-  } catch {
-    return false;
-  }
-  return domains.some((domain) => hostMatchesDomain(host, domain));
 }
 
 async function deleteUrlIfBlocked(url, domains) {
@@ -206,13 +183,14 @@ chrome.runtime.onStartup.addListener(async () => {
   await sweep();
 });
 
-// When the list changes, immediately clear existing history for the new list.
+// Clear existing history when the UI requests a sweep. The list write itself is
+// deliberately not a trigger (see SWEEP_REQUEST_KEY): the options page writes the
+// list on every keystroke but only requests a sweep once it settles, so this
+// never runs on a half-typed domain. Awaiting the sweep keeps the worker alive
+// until it finishes; the periodic alarm is the backstop if a request is missed.
 chrome.storage.onChanged.addListener(async (changes, area) => {
-  if (area === "local" && changes[STORAGE_KEY]) {
-    const next = Array.isArray(changes[STORAGE_KEY].newValue)
-      ? changes[STORAGE_KEY].newValue
-      : [];
-    await sweep(next.map(normalizeDomain).filter(Boolean));
+  if (area === "local" && changes[SWEEP_REQUEST_KEY]) {
+    await sweep();
   }
 });
 
