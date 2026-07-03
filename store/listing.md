@@ -137,4 +137,5 @@ Screenshot counts: Chrome takes 1 to 5, Edge takes up to 6. All four here work f
 - The same package zip goes to both stores with no manifest edits. The manifest name and description are browser-neutral (no "Chrome" branding), which Edge requires.
 - There is no `update_url` in the manifest, which both stores require for store-hosted extensions.
 - Edge certification takes up to 7 business days. Chrome review runs from a few days to a few weeks.
-- Store listing URLs do not exist until each store approves. Once they do, swap the "Coming soon" buttons on the site and README for the real listing links.
+- Chrome Web Store: approved and live (v1.1.0) at `https://chrome.google.com/webstore/detail/flebgmilmmjcmkdkkemacmgkbcoholok`. The site and README buttons now point to it. Swap in the slug-based canonical URL from the developer dashboard if you prefer it.
+- Microsoft Edge Add-ons: still in review. Swap its "Coming soon" button on the site for the real listing link once it is approved.
