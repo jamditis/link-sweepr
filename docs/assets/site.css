@@ -116,7 +116,7 @@ a:hover { text-decoration: underline; }
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .btn-ghost:hover { border-color: var(--accent-2); }
 
-/* Store buttons, in a "coming soon" state until listings go live. */
+/* Store buttons. A live listing is an <a>; a pending one is a dimmed <span>. */
 .stores { display: flex; flex-wrap: wrap; gap: 12px; }
 .store {
   display: flex;
@@ -129,6 +129,8 @@ a:hover { text-decoration: underline; }
   min-width: 210px;
 }
 .store[aria-disabled="true"] { opacity: 0.72; cursor: default; }
+a.store { transition: border-color 0.12s ease, transform 0.12s ease; }
+a.store:hover { border-color: var(--accent-2); transform: translateY(-1px); text-decoration: none; }
 .store .glyph { width: 26px; height: 26px; flex: none; }
 .store .st-name { font-weight: 600; font-size: 14px; color: var(--ink); line-height: 1.2; }
 .store .st-sub { font-size: 12px; color: var(--faint); }

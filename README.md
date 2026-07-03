@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="https://chrome.google.com/webstore/detail/flebgmilmmjcmkdkkemacmgkbcoholok"><img src="https://img.shields.io/chrome-web-store/v/flebgmilmmjcmkdkkemacmgkbcoholok?label=Chrome%20Web%20Store" alt="Chrome Web Store"></a>
   <a href="https://github.com/jamditis/link-sweepr/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/jamditis/link-sweepr/ci.yml?branch=main&label=CI" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/jamditis/link-sweepr" alt="License: MIT"></a>
   <a href="https://github.com/jamditis/link-sweepr/releases"><img src="https://img.shields.io/github/v/release/jamditis/link-sweepr?sort=semver&display_name=tag" alt="Latest release"></a>
@@ -22,8 +23,9 @@ the address bar. Everything runs locally, and nothing is ever sent anywhere.
 
 ## Get it
 
-LinkSweepr is being prepared for the Microsoft Edge Add-ons store and the Chrome
-Web Store. Until it is published there, you can [install it from source](#install-for-development).
+LinkSweepr is live on the [Chrome Web Store](https://chrome.google.com/webstore/detail/flebgmilmmjcmkdkkemacmgkbcoholok).
+It installs on both Google Chrome and Microsoft Edge, since Edge adds Chrome Web Store extensions directly. You can
+also [install it from source](#install-for-development).
 
 Project site and full guide: <https://jamditis.github.io/link-sweepr/>
 
@@ -85,9 +87,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the development guide and
 
 ## Status
 
-Pre-release. Preparing for submission to the Microsoft Edge Add-ons store and the
-Chrome Web Store from one shared codebase. Changes are tracked in
-[CHANGELOG.md](CHANGELOG.md).
+Live on the Chrome Web Store, which installs on both Google Chrome and Microsoft
+Edge. Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
