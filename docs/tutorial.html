@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tutorial - LinkSweepr</title>
+  <meta name="description" content="How to install LinkSweepr, add domains from the popup and options page, import and export your list, and how the sweep keeps matching visits out of your history.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><defs><linearGradient id='s' x1='58' y1='52' x2='86' y2='110' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='%231f5cf5'/><stop offset='1' stop-color='%2338ccf2'/></linearGradient></defs><path d='M42 26 L68 54' fill='none' stroke='%230e2a86' stroke-width='13' stroke-linecap='round'/><rect x='34' y='38' width='34' height='22' rx='11' transform='rotate(46 51 49)' fill='none' stroke='%232f6bf5' stroke-width='8'/><path d='M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z' fill='url(%23s)'/><path d='M62 50 C70 46 78 48 82 54' fill='none' stroke='%230e2a86' stroke-width='7' stroke-linecap='round'/><path d='M67 56 L58 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M73 56 L74 104' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M79 58 L90 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.35' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="markSweep" x1="58" y1="52" x2="86" y2="110" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#1f5cf5"/><stop offset="1" stop-color="#38ccf2"/>
+        </linearGradient>
+      </defs>
+      <path d="M42 26 L68 54" fill="none" stroke="#0e2a86" stroke-width="13" stroke-linecap="round"/>
+      <rect x="34" y="38" width="34" height="22" rx="11" transform="rotate(46 51 49)" fill="none" stroke="#2f6bf5" stroke-width="8"/>
+      <path d="M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z" fill="url(#markSweep)"/>
+      <path d="M62 50 C70 46 78 48 82 54" fill="none" stroke="#0e2a86" stroke-width="7" stroke-linecap="round"/>
+      <path d="M67 56 L58 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M73 56 L74 104" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M79 58 L90 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.35" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="LinkSweepr home">
+        <svg aria-hidden="true"><use href="#mark"/></svg><b>LinkSweepr</b>
+      </a>
+      <nav class="nav-links">
+        <a href="tutorial.html" class="active">Tutorial</a>
+        <a href="faq.html">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+        <a class="gh" href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head reveal">
+      <h1>Tutorial</h1>
+      <p class="sub">Install LinkSweepr, choose the domains you want kept out of history, and let it run.</p>
+    </div>
+
+    <div class="prose reveal d1">
+      <h2 id="install">Install it</h2>
+      <p>Once LinkSweepr is published, you will add it from the Microsoft Edge Add-ons store or the Chrome Web Store
+        in one click, the same as any other extension. Until then, you can load it from source in a couple of minutes.</p>
+
+      <h3 id="dev">Install from source</h3>
+      <ol>
+        <li>Download the code from <a href="https://github.com/jamditis/link-sweepr">the GitHub repository</a>
+          (use the green <b>Code</b> button, then <b>Download ZIP</b>) and unzip it, or clone it with git.</li>
+        <li>Open your browser's extensions page. In Edge that is <code>edge://extensions</code>; in Chrome it is
+          <code>chrome://extensions</code>.</li>
+        <li>Turn on <b>Developer mode</b> (the toggle is in the top-right corner in Chrome, and in the left sidebar in Edge).</li>
+        <li>Click <b>Load unpacked</b> and select the folder you unzipped. The LinkSweepr icon appears in your toolbar.</li>
+      </ol>
+      <p>The same folder works in both browsers. Nothing needs to be built or compiled first.</p>
+
+      <hr class="rule">
+
+      <h2 id="add">Add the domains you want kept out of history</h2>
+      <p>There are two ways to build your list. Both write to the same place, so you can mix them freely.</p>
+
+      <h3>From the options page</h3>
+      <p>Right-click the LinkSweepr toolbar icon and choose <b>Options</b> (or open it from the extensions page). You get a
+        text box with one domain per line:</p>
+      <pre><code>example.com
+news.example.org
+my-bank.com</code></pre>
+      <p>As you type, a live preview lists the distinct domains that will be filtered and flags any line that is not a valid
+        domain, so you can catch a typo before it matters. Entering <code>example.com</code> covers every subdomain
+        (<code>mail.example.com</code>, <code>app.example.com</code>) and every page beneath it. Changes save automatically.</p>
+
+      <h3>From the toolbar popup</h3>
+      <p>Click the LinkSweepr icon while you are on a site you want to filter. The popup shows how many domains are currently
+        filtered and offers a one-click button to block the site you are on, which adds its domain to your list. Internal
+        pages such as <code>chrome://</code> and <code>edge://</code> cannot be filtered, so the button leaves those alone.</p>
+
+      <hr class="rule">
+
+      <h2 id="move">Move your list between machines</h2>
+      <p>The options page can <b>export</b> your list to a plain text file and <b>import</b> one back. To copy your setup to
+        another computer, export on the first machine, then import the file on the second. The file is just your domains, one
+        per line, so you can edit it in any text editor.</p>
+
+      <hr class="rule">
+
+      <h2 id="how">How the sweep works</h2>
+      <p>LinkSweepr removes matching history in two ways that work together:</p>
+      <ul>
+        <li><b>As it happens.</b> The moment you visit a page on a domain in your list, that visit is deleted from history,
+          including same-page navigations inside single-page apps that never trigger a full page reload.</li>
+        <li><b>On a sweep.</b> On install, when the browser starts, on a periodic alarm, and whenever you change your list,
+          LinkSweepr scans existing history for anything that matches and removes it. So adding a domain also cleans up the
+          visits already recorded for it.</li>
+      </ul>
+      <p>Throughout, the sites themselves keep working normally and you stay signed in. Only the history entry is removed,
+        never a cookie, a session, or the page. Nothing about your browsing is sent anywhere; every step runs on your device.
+        For the details, see the <a href="privacy.html">privacy policy</a> and the <a href="faq.html">FAQ</a>.</p>
+
+      <p style="margin-top:24px"><a class="btn btn-primary" href="index.html#get">Get the extension</a></p>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <span>&copy; 2026 Joe Amditis. MIT licensed.</span>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="faq.html">FAQ</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      <span class="spacer"></span>
+      <a href="https://github.com/jamditis/link-sweepr/issues">Report an issue</a>
+    </div>
+  </footer>
+</body>
+</html>

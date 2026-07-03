@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy - LinkSweepr</title>
+  <meta name="description" content="LinkSweepr collects nothing and sends nothing anywhere. Everything runs on your device. This policy explains each permission and confirms no data ever leaves your browser.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><defs><linearGradient id='s' x1='58' y1='52' x2='86' y2='110' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='%231f5cf5'/><stop offset='1' stop-color='%2338ccf2'/></linearGradient></defs><path d='M42 26 L68 54' fill='none' stroke='%230e2a86' stroke-width='13' stroke-linecap='round'/><rect x='34' y='38' width='34' height='22' rx='11' transform='rotate(46 51 49)' fill='none' stroke='%232f6bf5' stroke-width='8'/><path d='M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z' fill='url(%23s)'/><path d='M62 50 C70 46 78 48 82 54' fill='none' stroke='%230e2a86' stroke-width='7' stroke-linecap='round'/><path d='M67 56 L58 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M73 56 L74 104' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M79 58 L90 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.35' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="markSweep" x1="58" y1="52" x2="86" y2="110" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#1f5cf5"/><stop offset="1" stop-color="#38ccf2"/>
+        </linearGradient>
+      </defs>
+      <path d="M42 26 L68 54" fill="none" stroke="#0e2a86" stroke-width="13" stroke-linecap="round"/>
+      <rect x="34" y="38" width="34" height="22" rx="11" transform="rotate(46 51 49)" fill="none" stroke="#2f6bf5" stroke-width="8"/>
+      <path d="M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z" fill="url(#markSweep)"/>
+      <path d="M62 50 C70 46 78 48 82 54" fill="none" stroke="#0e2a86" stroke-width="7" stroke-linecap="round"/>
+      <path d="M67 56 L58 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M73 56 L74 104" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M79 58 L90 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.35" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="LinkSweepr home">
+        <svg aria-hidden="true"><use href="#mark"/></svg><b>LinkSweepr</b>
+      </a>
+      <nav class="nav-links">
+        <a href="tutorial.html">Tutorial</a>
+        <a href="faq.html">FAQ</a>
+        <a href="privacy.html" class="active">Privacy</a>
+        <a class="gh" href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head reveal">
+      <h1>Privacy policy</h1>
+      <p class="sub">LinkSweepr collects nothing and sends nothing anywhere. Everything runs on your device.</p>
+      <p class="updated">Last updated July 2, 2026</p>
+    </div>
+
+    <div class="prose reveal d1">
+      <div class="callout" style="margin:8px 0 26px">
+        <h3 style="margin-top:0">The short version</h3>
+        <p style="margin:0">LinkSweepr does not collect, transmit, sync, sell, or share any of your data. It has no server,
+          makes no network requests, and runs no remote code. The only thing it stores is the list of domains you type,
+          which stays in your browser's local storage on your own device. Uninstalling the extension removes it.</p>
+      </div>
+
+      <h2>What LinkSweepr collects</h2>
+      <p>Nothing is collected or transmitted. LinkSweepr has no analytics, no telemetry, no accounts, no tracking, and no
+        outbound connections of any kind. It never sends your browsing history, your domain list, or anything else off your
+        device.</p>
+
+      <h2>Permissions and why they are needed</h2>
+      <p>Browsers require an extension to declare the capabilities it uses. Each capability below is used locally, only for
+        the feature described, and never to gather or send data.</p>
+      <table>
+        <thead><tr><th>Permission</th><th>Why LinkSweepr uses it</th></tr></thead>
+        <tbody>
+          <tr><td>history</td><td>Reads and deletes browsing history entries locally so visits to the domains you chose can
+            be removed. History is processed on your device only and is never transmitted.</td></tr>
+          <tr><td>storage</td><td>Saves your domain list and settings in local extension storage so they persist between
+            sessions. This data stays on your device.</td></tr>
+          <tr><td>webNavigation</td><td>Detects same-page navigations inside single-page apps so a matching visit is removed
+            the moment it is recorded, not just on a full page load.</td></tr>
+          <tr><td>alarms</td><td>Schedules a periodic local sweep so any history entry that was missed is cleaned up on your
+            device.</td></tr>
+          <tr><td>activeTab</td><td>Reads only the current tab's address when you click the toolbar button to block a site,
+            which avoids asking for broad access to every website you visit.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Where your list is stored</h2>
+      <p>Your domain list lives in your browser's local extension storage (<code>chrome.storage.local</code>) on the device
+        where you entered it. If you have browser sync turned on, local extension storage is not synced by LinkSweepr; to move
+        your list to another machine, use the export and import buttons on the options page.</p>
+
+      <h2>Sharing</h2>
+      <p>There is nothing to share, because nothing is collected. LinkSweepr does not disclose data to any third party,
+        advertiser, or analytics provider, and has no way to, since it makes no network requests.</p>
+
+      <h2>Network activity and remote code</h2>
+      <p>LinkSweepr makes no network requests. It contains no remote code, loads nothing from a server at runtime, and ships
+        as plain, unminified JavaScript you can read in the source. What you install is all it ever runs.</p>
+
+      <h2>Retention and deletion</h2>
+      <p>Your list is kept only until you change or clear it. You can remove any domain on the options page at any time, or
+        clear the list entirely. Uninstalling LinkSweepr deletes its local storage, which removes your list along with it.
+        The extension does not keep a copy anywhere else, because there is nowhere else.</p>
+
+      <h2>Children</h2>
+      <p>LinkSweepr is a general-purpose tool that collects no personal information from anyone, including children.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If this policy changes, the updated version will be posted on this page with a new date above. Because the extension
+        collects nothing, any change would be to wording rather than to data practices.</p>
+
+      <h2>Contact</h2>
+      <p>Questions or concerns can be raised on the
+        <a href="https://github.com/jamditis/link-sweepr/issues">project's issue tracker</a>. For a security-sensitive report,
+        use the repository's <a href="https://github.com/jamditis/link-sweepr/security/advisories">private security advisory</a>
+        form instead of a public issue.</p>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <span>&copy; 2026 Joe Amditis. MIT licensed.</span>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="faq.html">FAQ</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      <span class="spacer"></span>
+      <a href="https://github.com/jamditis/link-sweepr/issues">Report an issue</a>
+    </div>
+  </footer>
+</body>
+</html>

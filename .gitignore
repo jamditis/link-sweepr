@@ -6,6 +6,9 @@ build/
 # Listing assets are large binaries; keep source separate if they grow
 # store/screenshots/*.psd
 
+# Raw brand source art (large, unreferenced by the build; derived marks live in icons/ and docs/assets/)
+assets-src/
+
 # OS and editor cruft
 .DS_Store
 Thumbs.db

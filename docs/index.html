@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LinkSweepr - keep chosen sites out of your browsing history</title>
+  <meta name="description" content="LinkSweepr is a Microsoft Edge and Chrome extension that automatically removes chosen domains, all their subdomains, and every page under them from your browsing history. Sites keep working; everything runs on your device.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><defs><linearGradient id='s' x1='58' y1='52' x2='86' y2='110' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='%231f5cf5'/><stop offset='1' stop-color='%2338ccf2'/></linearGradient></defs><path d='M42 26 L68 54' fill='none' stroke='%230e2a86' stroke-width='13' stroke-linecap='round'/><rect x='34' y='38' width='34' height='22' rx='11' transform='rotate(46 51 49)' fill='none' stroke='%232f6bf5' stroke-width='8'/><path d='M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z' fill='url(%23s)'/><path d='M62 50 C70 46 78 48 82 54' fill='none' stroke='%230e2a86' stroke-width='7' stroke-linecap='round'/><path d='M67 56 L58 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M73 56 L74 104' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M79 58 L90 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.35' stroke-linecap='round'/></svg>">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LinkSweepr - keep chosen sites out of your browsing history">
+  <meta property="og:description" content="Chosen domains never touch your history. Sites keep working, you stay signed in, and nothing leaves your device.">
+  <meta property="og:url" content="https://jamditis.github.io/link-sweepr/">
+  <meta property="og:image" content="https://jamditis.github.io/link-sweepr/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <!-- Mark sprite: defined once, referenced with <use> in the nav and hero. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="markSweep" x1="58" y1="52" x2="86" y2="110" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#1f5cf5"/>
+          <stop offset="1" stop-color="#38ccf2"/>
+        </linearGradient>
+      </defs>
+      <path d="M42 26 L68 54" fill="none" stroke="#0e2a86" stroke-width="13" stroke-linecap="round"/>
+      <rect x="34" y="38" width="34" height="22" rx="11" transform="rotate(46 51 49)" fill="none" stroke="#2f6bf5" stroke-width="8"/>
+      <path d="M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z" fill="url(#markSweep)"/>
+      <path d="M62 50 C70 46 78 48 82 54" fill="none" stroke="#0e2a86" stroke-width="7" stroke-linecap="round"/>
+      <path d="M67 56 L58 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M73 56 L74 104" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M79 58 L90 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.35" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="LinkSweepr home">
+        <svg aria-hidden="true"><use href="#mark"/></svg>
+        <b>LinkSweepr</b>
+      </a>
+      <nav class="nav-links">
+        <a href="tutorial.html">Tutorial</a>
+        <a href="faq.html">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+        <a class="gh" href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <img class="mark reveal" src="assets/icon.png" alt="LinkSweepr" width="256" height="256">
+      <h1 class="reveal d1">Keep chosen sites out of<br>your browsing history</h1>
+      <p class="lede reveal d2">List the domains you would rather not keep. LinkSweepr removes every visit to
+        them, all their subdomains, and each page underneath, the moment it is recorded.</p>
+      <div class="cta reveal d3">
+        <a class="btn btn-primary" href="#get">Get the extension</a>
+        <a class="btn btn-ghost" href="tutorial.html">Read the guide</a>
+      </div>
+      <p class="hero-note reveal d4">Works on Microsoft Edge and Google Chrome. Free and open source.</p>
+    </section>
+
+    <div class="wrap"><hr class="rule"></div>
+
+    <section class="wrap">
+      <h2>A cleaner history, without changing how you browse</h2>
+      <div class="grid">
+        <div class="card">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg>
+          <h3>Chosen domains vanish</h3>
+          <p>Every visit to a domain on your list is deleted from history the instant it is written, so it never shows up in the history page or the address bar.</p>
+        </div>
+        <div class="card">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+          <h3>Subdomains and paths, too</h3>
+          <p>Blocking <span class="mono">example.com</span> also covers <span class="mono">mail.example.com</span>, <span class="mono">app.example.com</span>, and every page beneath them.</p>
+        </div>
+        <div class="card">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <h3>Sites keep working</h3>
+          <p>Pages load normally and you stay signed in. LinkSweepr removes only the history entry, never a cookie, a session, or the page itself.</p>
+        </div>
+        <div class="card">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7l8-4z"/></svg>
+          <h3>Nothing leaves your device</h3>
+          <p>No servers, no sync, no analytics, no remote code. Your domain list lives in your browser's local extension storage and only there.</p>
+        </div>
+        <div class="card">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v4h-4"/></svg>
+          <h3>Catches single-page apps</h3>
+          <p>In-app navigations that never trigger a full page load, the kind modern web apps use, are detected and swept along with ordinary visits.</p>
+        </div>
+        <div class="card">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 2-2 6-6-16z"/></svg>
+          <h3>Block in one click</h3>
+          <p>Click the toolbar button to add the site you are on to your list on the spot. The popup also shows how many domains are being filtered.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap"><hr class="rule"></div>
+
+    <section class="wrap">
+      <h2>Three steps, then it runs on its own</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>Add it to your browser and open the options page</h3>
+            <p>Install from the store or load it as an unpacked extension, then open LinkSweepr's options.</p></div>
+        </div>
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>List the domains you want kept out of history</h3>
+            <p>One domain per line. A live preview shows exactly which domains will be filtered and flags any line that is not a valid domain. Changes save automatically.</p></div>
+        </div>
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>Let it sweep</h3>
+            <p>Matching visits are removed as they happen. On install, at startup, on a periodic alarm, and whenever you edit the list, LinkSweepr also sweeps existing history for anything that matches.</p></div>
+        </div>
+      </div>
+      <p class="lead" style="margin-top:16px">Want the full walkthrough, including import and export? <a href="tutorial.html">Read the tutorial</a>.</p>
+    </section>
+
+    <div class="wrap"><hr class="rule"></div>
+
+    <section class="wrap" id="get">
+      <h2>Coming to the Edge and Chrome stores</h2>
+      <p class="lead">LinkSweepr is being prepared for the Microsoft Edge Add-ons store and the Chrome Web Store.
+        The store buttons below go live the moment each listing is approved. Until then, you can install it from source.</p>
+      <div class="stores" style="margin:22px 0 16px">
+        <span class="store" aria-disabled="true">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.6"><path d="M14 3.5a10.5 10.5 0 1 0 6 9.5 6 6 0 0 1-9-6.5"/><path d="M11 12a5 5 0 0 1 9-2.5"/></svg>
+          <span><span class="st-name">Microsoft Edge Add-ons</span><br><span class="st-sub">Coming soon</span></span>
+        </span>
+        <span class="store" aria-disabled="true">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 8.8h8.3M9.1 13.6 5 20.4M14.9 13.6 10.8 20.6"/></svg>
+          <span><span class="st-name">Chrome Web Store</span><br><span class="st-sub">Coming soon</span></span>
+        </span>
+      </div>
+      <p class="lead">Prefer to build it yourself? Follow <a href="tutorial.html#dev">install from source</a> in the tutorial,
+        or grab the code on <a href="https://github.com/jamditis/link-sweepr">GitHub</a>.</p>
+    </section>
+
+    <div class="wrap"><hr class="rule"></div>
+
+    <section class="wrap">
+      <div class="callout">
+        <h2>Your history is yours</h2>
+        <p class="lead">LinkSweepr does not transmit, sync, or share any browsing data with any server or third party.
+          The only data it stores is the domain list you type, held in local browser storage. Uninstalling removes it.</p>
+        <p style="margin:14px 0 0"><a href="privacy.html">Read the full privacy policy</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <span>&copy; 2026 Joe Amditis. MIT licensed.</span>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="faq.html">FAQ</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      <span class="spacer"></span>
+      <a href="https://github.com/jamditis/link-sweepr/issues">Report an issue</a>
+    </div>
+  </footer>
+</body>
+</html>

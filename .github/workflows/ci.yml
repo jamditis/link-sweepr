@@ -33,10 +33,7 @@ jobs:
         run: node scripts/validate-manifest.mjs
 
       - name: Assemble extension bundle
-        run: |
-          mkdir -p dist/ext/icons
-          cp manifest.json background.js domain.js options.html options.js popup.html popup.js dist/ext/
-          cp icons/*.png dist/ext/icons/
+        run: node scripts/package.mjs --assemble-only
 
       - name: Lint extension (Chrome and Edge relevant errors only)
         run: node scripts/check-lint.mjs dist/ext
