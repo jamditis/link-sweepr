@@ -24,7 +24,8 @@ the address bar. Everything runs locally, and nothing is ever sent anywhere.
 ## Get it
 
 LinkSweepr is live on the [Chrome Web Store](https://chrome.google.com/webstore/detail/flebgmilmmjcmkdkkemacmgkbcoholok).
-The Microsoft Edge Add-ons listing is in review. You can also [install it from source](#install-for-development).
+It installs on both Google Chrome and Microsoft Edge, since Edge adds Chrome Web Store extensions directly. You can
+also [install it from source](#install-for-development).
 
 Project site and full guide: <https://jamditis.github.io/link-sweepr/>
 
@@ -86,9 +87,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the development guide and
 
 ## Status
 
-Live on the Chrome Web Store. The Microsoft Edge Add-ons listing is in review,
-built from the same shared codebase. Changes are tracked in
-[CHANGELOG.md](CHANGELOG.md).
+Live on the Chrome Web Store, which installs on both Google Chrome and Microsoft
+Edge. Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

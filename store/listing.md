@@ -138,4 +138,4 @@ Screenshot counts: Chrome takes 1 to 5, Edge takes up to 6. All four here work f
 - There is no `update_url` in the manifest, which both stores require for store-hosted extensions.
 - Edge certification takes up to 7 business days. Chrome review runs from a few days to a few weeks.
 - Chrome Web Store: approved and live (v1.1.0) at `https://chrome.google.com/webstore/detail/flebgmilmmjcmkdkkemacmgkbcoholok`. The site and README buttons now point to it. Swap in the slug-based canonical URL from the developer dashboard if you prefer it.
-- Microsoft Edge Add-ons: still in review. Swap its "Coming soon" button on the site for the real listing link once it is approved.
+- Microsoft Edge: Edge installs Chrome Web Store extensions directly, so the CWS listing already covers Edge users, and the site presents both browsers off that one listing. A dedicated Microsoft Edge Add-ons listing is optional and can be added later for discoverability inside the Edge store; the assets in `store/` are browser-neutral and ready if you decide to submit one.
