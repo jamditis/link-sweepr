@@ -142,6 +142,7 @@ a:hover { text-decoration: underline; }
   letter-spacing: -0.03em;
   margin: 0 0 6px;
   font-weight: 700;
+  text-wrap: balance;
 }
 .hero .lede {
   font-size: clamp(17px, 2.4vw, 21px);
@@ -247,4 +248,12 @@ p { margin: 0 0 14px; }
   .nav-links { gap: 15px; }
   .nav-links a:not(.gh) { display: none; }
   .hero { padding: 48px 0 26px; }
+  /* More side gutter so content isn't pressed against the screen edge. */
+  .wrap { padding: 0 26px; }
+  /* Drop the hero clamp floor so the headline shrinks with the viewport
+     instead of staying near-huge and edge-to-edge on a phone. */
+  .hero h1 { font-size: clamp(30px, 8vw, 46px); }
+  /* The hard break is a desktop two-line split; on a phone it strands the
+     word before it ("of") on its own line. Let the headline flow instead. */
+  .hero h1 br { display: none; }
 }
