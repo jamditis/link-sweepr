@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an improvement or a new capability for LinkSweepr.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        LinkSweepr aims to stay small and single-purpose: keep chosen domains out
+        of browsing history, on-device, with no data leaving the browser. Requests
+        that fit that scope are the easiest to take on.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve
+      description: Describe the situation you run into, not just the feature you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should LinkSweepr do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Optional. Other ways you have tried to handle this.
+    validations:
+      required: false
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This keeps LinkSweepr's single purpose (managing what enters browsing history) and does not add data collection or network calls.
+          required: false

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and usage help
+    url: https://jamditis.github.io/link-sweepr/faq.html
+    about: Check the FAQ for common questions before opening an issue.

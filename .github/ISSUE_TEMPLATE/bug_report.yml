@@ -1,0 +1,64 @@
+name: Bug report
+description: Report something in LinkSweepr that is not working as expected.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. LinkSweepr runs entirely on your device, so
+        the details below are what let us reproduce the problem without any data
+        leaving your browser.
+  - type: input
+    id: version
+    attributes:
+      label: LinkSweepr version
+      description: Shown on the extensions page (edge://extensions or chrome://extensions).
+      placeholder: "1.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Microsoft Edge
+        - Google Chrome
+        - Other Chromium browser
+    validations:
+      required: true
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version
+      placeholder: "e.g. 126.0.2592.87"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps, including the domains you had listed if relevant.
+      placeholder: |
+        1. Add example.com on the options page.
+        2. Visit https://example.com.
+        3. Open the history page.
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Service worker console output
+      description: >-
+        Optional. On the extensions page, open the LinkSweepr service worker and
+        copy any errors. Remove anything you would rather not share.
+      render: text
+    validations:
+      required: false

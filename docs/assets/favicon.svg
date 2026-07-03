@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="sweep" x1="58" y1="52" x2="86" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1f5cf5"/>
+      <stop offset="1" stop-color="#38ccf2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- handle -->
+  <path d="M42 26 L68 54" fill="none" stroke="#0e2a86" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- chain link on the handle (the "link" motif) -->
+  <rect x="34" y="38" width="34" height="22" rx="11"
+        transform="rotate(46 51 49)"
+        fill="none" stroke="#2f6bf5" stroke-width="8"/>
+
+  <!-- broom head: a flared fan sweeping down and to the right -->
+  <path d="M66 50
+           C60 70 54 88 52 102
+           C68 112 90 108 104 96
+           C96 78 86 62 78 52
+           C74 48 70 48 66 50 Z"
+        fill="url(#sweep)"/>
+
+  <!-- ferrule band where the handle meets the bristles -->
+  <path d="M62 50 C70 46 78 48 82 54" fill="none" stroke="#0e2a86" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- bristle grooves fanning from the ferrule to the base -->
+  <path d="M67 56 L58 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+  <path d="M73 56 L74 104" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+  <path d="M79 58 L90 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.35" stroke-linecap="round"/>
+</svg>

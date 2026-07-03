@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FAQ - LinkSweepr</title>
+  <meta name="description" content="Answers about LinkSweepr: whether it deletes your whole history, whether sites keep working, what a domain covers, single-page apps, performance, and removing a domain.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><defs><linearGradient id='s' x1='58' y1='52' x2='86' y2='110' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='%231f5cf5'/><stop offset='1' stop-color='%2338ccf2'/></linearGradient></defs><path d='M42 26 L68 54' fill='none' stroke='%230e2a86' stroke-width='13' stroke-linecap='round'/><rect x='34' y='38' width='34' height='22' rx='11' transform='rotate(46 51 49)' fill='none' stroke='%232f6bf5' stroke-width='8'/><path d='M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z' fill='url(%23s)'/><path d='M62 50 C70 46 78 48 82 54' fill='none' stroke='%230e2a86' stroke-width='7' stroke-linecap='round'/><path d='M67 56 L58 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M73 56 L74 104' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.4' stroke-linecap='round'/><path d='M79 58 L90 100' fill='none' stroke='%230b2a86' stroke-width='3.5' stroke-opacity='0.35' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 128 128">
+      <defs>
+        <linearGradient id="markSweep" x1="58" y1="52" x2="86" y2="110" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#1f5cf5"/><stop offset="1" stop-color="#38ccf2"/>
+        </linearGradient>
+      </defs>
+      <path d="M42 26 L68 54" fill="none" stroke="#0e2a86" stroke-width="13" stroke-linecap="round"/>
+      <rect x="34" y="38" width="34" height="22" rx="11" transform="rotate(46 51 49)" fill="none" stroke="#2f6bf5" stroke-width="8"/>
+      <path d="M66 50 C60 70 54 88 52 102 C68 112 90 108 104 96 C96 78 86 62 78 52 C74 48 70 48 66 50 Z" fill="url(#markSweep)"/>
+      <path d="M62 50 C70 46 78 48 82 54" fill="none" stroke="#0e2a86" stroke-width="7" stroke-linecap="round"/>
+      <path d="M67 56 L58 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M73 56 L74 104" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.4" stroke-linecap="round"/>
+      <path d="M79 58 L90 100" fill="none" stroke="#0b2a86" stroke-width="3.5" stroke-opacity="0.35" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="LinkSweepr home">
+        <svg aria-hidden="true"><use href="#mark"/></svg><b>LinkSweepr</b>
+      </a>
+      <nav class="nav-links">
+        <a href="tutorial.html">Tutorial</a>
+        <a href="faq.html" class="active">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+        <a class="gh" href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head reveal">
+      <h1>Frequently asked questions</h1>
+      <p class="sub">How LinkSweepr behaves, what it touches, and what it leaves alone.</p>
+    </div>
+
+    <div class="reveal d1" style="margin-top:20px">
+      <details class="qa">
+        <summary>Does LinkSweepr delete my whole browsing history?</summary>
+        <div class="a"><p>No. It only removes visits to the domains you put on your list. Everything else in your history is
+          left untouched. If your list is empty, LinkSweepr removes nothing.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Do the sites still work if I filter them?</summary>
+        <div class="a"><p>Yes. LinkSweepr removes only the history record of a visit. It does not block, break, or slow the
+          site, and it does not touch cookies or sessions. Pages load normally and you stay signed in, exactly as before.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Will filtering a site log me out or clear my cookies?</summary>
+        <div class="a"><p>No. LinkSweepr never touches cookies, local site data, or sessions. It removes the history entry
+          and nothing else, so your logins are unaffected.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Is this the same as incognito mode or clearing my history?</summary>
+        <div class="a"><p>It is different from both. Incognito forgets an entire private session once you close it. Clearing
+          history is a manual, all-or-nothing wipe. LinkSweepr is automatic and selective: it keeps only the domains you
+          choose out of your normal history, continuously, while everything else is recorded as usual.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>What does blocking a domain actually cover?</summary>
+        <div class="a"><p>The domain, all of its subdomains, and every page beneath it. Blocking <span class="mono">example.com</span>
+          also covers <span class="mono">mail.example.com</span>, <span class="mono">app.example.com</span>, and any path such
+          as <span class="mono">example.com/account</span>.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Does it catch single-page apps that never reload?</summary>
+        <div class="a"><p>Yes. Many modern web apps change the page without a full reload. LinkSweepr watches for those in-app
+          navigations and removes a matching visit the moment it is recorded, not just on a full page load.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Does it slow down my browser?</summary>
+        <div class="a"><p>No noticeable impact. The work is small and local: a quick check against your list when a page is
+          recorded, plus an occasional sweep of existing history. There are no network requests to wait on.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Is anything sent to a server?</summary>
+        <div class="a"><p>No. LinkSweepr makes no network requests, has no analytics, and runs no remote code. Your list and
+          your history stay on your device. See the <a href="privacy.html">privacy policy</a> for the full detail.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>How do I stop filtering a site?</summary>
+        <div class="a"><p>Open the options page and delete that domain's line from the list. Changes save automatically.
+          From that point on, visits to the site are recorded in history normally again. Removing a domain does not restore
+          visits that were already swept.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>How do I back up my list or move it to another computer?</summary>
+        <div class="a"><p>The options page can export your list to a plain text file and import one back. Export on one
+          machine, then import the file on another to copy your setup. The file is just your domains, one per line.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Does it work in both Edge and Chrome?</summary>
+        <div class="a"><p>Yes. LinkSweepr is one Manifest V3 extension that runs on Microsoft Edge and Google Chrome from
+          the same code, with no per-browser setup.</p></div>
+      </details>
+
+      <details class="qa">
+        <summary>Is it free and open source?</summary>
+        <div class="a"><p>Yes. LinkSweepr is free and MIT licensed. You can read every line of the source on
+          <a href="https://github.com/jamditis/link-sweepr">GitHub</a>.</p></div>
+      </details>
+    </div>
+
+    <p class="lead" style="margin:26px 0 0">Still stuck? <a href="https://github.com/jamditis/link-sweepr/issues">Open an issue</a>
+      or read the <a href="tutorial.html">tutorial</a>.</p>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <span>&copy; 2026 Joe Amditis. MIT licensed.</span>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="faq.html">FAQ</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/jamditis/link-sweepr">GitHub</a>
+      <span class="spacer"></span>
+      <a href="https://github.com/jamditis/link-sweepr/issues">Report an issue</a>
+    </div>
+  </footer>
+</body>
+</html>
