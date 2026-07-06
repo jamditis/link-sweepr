@@ -49,6 +49,53 @@
     return domains.some((domain) => hostMatchesDomain(host, domain));
   }
 
+  // True when `needle` appears in `host` starting at a label boundary - the start
+  // of the host or immediately after a dot. This is a search test, not a blocking
+  // test: it lets a partial query narrow ("github.co" finds "github.com") without
+  // matching across a label seam, so "reddit.com" never finds "notreddit.com".
+  function labelAlignedIncludes(host, needle) {
+    let from = 0;
+    for (;;) {
+      const at = host.indexOf(needle, from);
+      if (at === -1) return false;
+      if (at === 0 || host[at - 1] === ".") return true;
+      from = at + 1;
+    }
+  }
+
+  // The two ways a listed domain can match an options-page filter query, both
+  // reusing the shared normalization so the filter agrees with the sweep. The
+  // options page tries strict first and only falls back to partial when nothing
+  // matches strictly (see options.js), so a complete query like "reddit.com"
+  // never surfaces the unrelated "reddit.company" while a real match exists.
+  // Both are display-only: they decide which chips show, never what is stored.
+
+  // Strict: the sweep's suffix rule, in both directions. A parent query surfaces
+  // its subdomains and a subdomain query surfaces the parent that covers it, so
+  // "reddit.com" matches "old.reddit.com" the way blocking it would - and never a
+  // lookalike like "notreddit.com". Requires a query that normalizes to a host.
+  function domainMatchesQueryStrict(domain, query) {
+    const listed = normalizeDomain(domain);
+    if (!listed) return false;
+    const q = normalizeDomain(String(query).trim().toLowerCase());
+    if (!q) return false;
+    return hostMatchesDomain(listed, q) || hostMatchesDomain(q, listed);
+  }
+
+  // Partial: a label-aligned prefix search for narrowing while a label is still
+  // half-typed ("github.co" finds "github.com", "old.red" finds "old.reddit.com").
+  // It runs on the normalized query when it has one, so a "www.", scheme, or "*."
+  // prefix narrows the same way a bare host would, and matches only at a label
+  // boundary so it never crosses a label seam ("reddit.com" never finds
+  // "notreddit.com").
+  function domainMatchesQueryPartial(domain, query) {
+    const raw = String(query).trim().toLowerCase();
+    if (!raw) return false;
+    const listed = normalizeDomain(domain);
+    if (!listed) return false;
+    return labelAlignedIncludes(listed, normalizeDomain(raw) || raw);
+  }
+
   // True when a URL's host is, or is a subdomain of, any blocked domain.
   function urlIsBlocked(url, domains) {
     let host;
@@ -128,6 +175,8 @@
   root.normalizeDomain = normalizeDomain;
   root.hostMatchesDomain = hostMatchesDomain;
   root.hostIsBlocked = hostIsBlocked;
+  root.domainMatchesQueryStrict = domainMatchesQueryStrict;
+  root.domainMatchesQueryPartial = domainMatchesQueryPartial;
   root.urlIsBlocked = urlIsBlocked;
   root.blockableHost = blockableHost;
   root.addBlockedDomain = addBlockedDomain;
@@ -139,6 +188,8 @@
       normalizeDomain,
       hostMatchesDomain,
       hostIsBlocked,
+      domainMatchesQueryStrict,
+      domainMatchesQueryPartial,
       urlIsBlocked,
       blockableHost,
       addBlockedDomain,
