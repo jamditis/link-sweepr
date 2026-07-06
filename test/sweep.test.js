@@ -9,11 +9,15 @@ const assert = require("node:assert/strict");
 // must exist before it is required. These stubs are no-ops; the history methods
 // are replaced per test by historyStore().
 const noop = () => {};
-// Capture the worker's storage.onChanged and runtime.onMessage listeners so a
-// test can drive them and assert which key triggers a sweep, and what the popup's
-// count request replies.
+// Capture the worker's storage.onChanged, runtime.onMessage, commands, install,
+// and context-menu listeners so a test can drive them and assert which key
+// triggers a sweep, what the popup's count request replies, and that the shortcut
+// and menu block the active tab.
 const onChangedListeners = [];
 const messageListeners = [];
+const commandListeners = [];
+const menuClickListeners = [];
+const installedListeners = [];
 global.chrome = {
   history: {
     onVisited: { addListener: noop },
@@ -25,15 +29,23 @@ global.chrome = {
     onReferenceFragmentUpdated: { addListener: noop },
   },
   runtime: {
-    onInstalled: { addListener: noop },
+    onInstalled: { addListener: (fn) => installedListeners.push(fn) },
     onStartup: { addListener: noop },
     onMessage: { addListener: (fn) => messageListeners.push(fn) },
   },
   storage: {
-    local: { get: async () => ({}) },
+    local: { get: async () => ({}), set: async () => {} },
     onChanged: { addListener: (fn) => onChangedListeners.push(fn) },
   },
   alarms: { create: noop, onAlarm: { addListener: noop } },
+  commands: { onCommand: { addListener: (fn) => commandListeners.push(fn) } },
+  contextMenus: {
+    // MV3 returns a promise when no callback is passed; ensureBlockMenu awaits it.
+    removeAll: (cb) => (cb ? (cb(), undefined) : Promise.resolve()),
+    create: noop,
+    onClicked: { addListener: (fn) => menuClickListeners.push(fn) },
+  },
+  tabs: { query: async () => [] },
 };
 
 // The service worker pulls its domain helpers in with importScripts("domain.js").
@@ -80,6 +92,19 @@ function historyStore(items) {
     store = store.filter((it) => it.url !== url);
   };
   return { deleted, remaining: () => store };
+}
+
+// Back chrome.storage.local with a real object so blockUrlDomain can read the list
+// and write the updated one. get honors the single-key form the worker uses;
+// returns the backing object so a test can assert what was written.
+function storageStore(initial = {}) {
+  const data = { ...initial };
+  global.chrome.storage.local.get = async (key) =>
+    typeof key === "string" ? (key in data ? { [key]: data[key] } : {}) : { ...data };
+  global.chrome.storage.local.set = async (obj) => {
+    Object.assign(data, obj);
+  };
+  return data;
 }
 
 test("normalizeDomain collapses every input shape to the bare host", () => {
@@ -334,4 +359,141 @@ test("getSweepCount message replies with the count; other messages are ignored",
   assert.equal(reply, undefined, "an unrelated message draws no response");
 
   global.chrome.history.deleteUrl = async () => {};
+});
+
+test("blockUrlDomain adds a new domain and requests a sweep", async () => {
+  const store = storageStore({ blockedDomains: ["example.org"] });
+
+  const res = await bg.blockUrlDomain("https://www.reddit.com/r/x");
+
+  assert.equal(res.status, "added");
+  assert.equal(res.host, "reddit.com", "www. is normalized off the host");
+  assert.deepEqual(store.blockedDomains, ["example.org", "reddit.com"]);
+  assert.equal(typeof store.sweepRequest, "number", "a sweep was requested");
+});
+
+test("blockUrlDomain no-ops on internal and non-web pages", async () => {
+  const store = storageStore({ blockedDomains: ["example.org"] });
+
+  for (const url of [
+    "chrome://extensions",
+    "edge://settings",
+    "about:blank",
+    "file:///tmp/x.html",
+    "not a url",
+    "",
+  ]) {
+    const res = await bg.blockUrlDomain(url);
+    assert.equal(res.status, "unblockable", url);
+  }
+
+  assert.deepEqual(store.blockedDomains, ["example.org"], "list unchanged");
+  assert.equal(store.sweepRequest, undefined, "no sweep requested");
+});
+
+test("blockUrlDomain skips a domain already covered by the list", async () => {
+  const store = storageStore({ blockedDomains: ["reddit.com"] });
+
+  // Exact match is already covered.
+  let res = await bg.blockUrlDomain("https://reddit.com/");
+  assert.equal(res.status, "covered");
+
+  // A subdomain of a listed parent is covered too - the same suffix-aware skip the
+  // popup applies, so the sweep already removes it and nothing is added.
+  res = await bg.blockUrlDomain("https://old.reddit.com/r/x");
+  assert.equal(res.status, "covered");
+
+  assert.deepEqual(store.blockedDomains, ["reddit.com"], "nothing added");
+  assert.equal(store.sweepRequest, undefined, "no redundant sweep");
+});
+
+test("the keyboard command blocks the active tab's domain", async () => {
+  const store = storageStore({ blockedDomains: [] });
+  global.chrome.tabs.query = async () => [
+    { url: "https://news.ycombinator.com/item?id=1" },
+  ];
+
+  for (const fn of commandListeners) await fn("block-current-site");
+  assert.deepEqual(store.blockedDomains, ["news.ycombinator.com"]);
+
+  // An unrelated command name does nothing.
+  global.chrome.tabs.query = async () => [{ url: "https://example.com/" }];
+  for (const fn of commandListeners) await fn("some-other-command");
+  assert.deepEqual(
+    store.blockedDomains,
+    ["news.ycombinator.com"],
+    "only the block command blocks"
+  );
+});
+
+test("the context menu blocks the page it was opened on", async () => {
+  const store = storageStore({ blockedDomains: [] });
+
+  const info = { menuItemId: "block-current-site", pageUrl: "https://twitter.com/home" };
+  for (const fn of menuClickListeners) await fn(info, { url: "https://twitter.com/home" });
+  assert.deepEqual(store.blockedDomains, ["twitter.com"]);
+
+  // A click on a different menu item is ignored.
+  const other = { menuItemId: "something-else", pageUrl: "https://example.com/" };
+  for (const fn of menuClickListeners) await fn(other, {});
+  assert.deepEqual(store.blockedDomains, ["twitter.com"], "only our item blocks");
+});
+
+test("two rapid worker blocks both land (serialized queue, no stale overwrite)", async () => {
+  const store = storageStore({ blockedDomains: [] });
+
+  // Fire two blocks without awaiting between them. blockQueue must serialize the
+  // read-modify-write so the second reads the first's result rather than the empty
+  // list it started from - otherwise the later write would drop the earlier host.
+  const [a, b] = await Promise.all([
+    bg.blockUrlDomain("https://a.example/"),
+    bg.blockUrlDomain("https://b.example/"),
+  ]);
+
+  assert.equal(a.status, "added");
+  assert.equal(b.status, "added");
+  assert.deepEqual(store.blockedDomains.slice().sort(), ["a.example", "b.example"]);
+});
+
+test("same-millisecond worker blocks write distinct sweep tokens", async () => {
+  storageStore({ blockedDomains: [] });
+  const tokens = [];
+  const realSet = global.chrome.storage.local.set;
+  global.chrome.storage.local.set = async (obj) => {
+    if ("sweepRequest" in obj) tokens.push(obj.sweepRequest);
+    return realSet(obj);
+  };
+  // Freeze the clock so both blocks see the same millisecond; the monotonic token,
+  // not the wall clock, must keep the two writes distinct so storage.onChanged
+  // fires for each and both new domains get swept.
+  const realNow = Date.now;
+  Date.now = () => 1000;
+  try {
+    await Promise.all([
+      bg.blockUrlDomain("https://a.example/"),
+      bg.blockUrlDomain("https://b.example/"),
+    ]);
+  } finally {
+    Date.now = realNow;
+    global.chrome.storage.local.set = realSet;
+  }
+
+  assert.equal(tokens.length, 2, "both blocks requested a sweep");
+  assert.notEqual(tokens[0], tokens[1], "distinct tokens despite the shared millisecond");
+});
+
+test("install registers the context-menu item within the event lifetime", async () => {
+  storageStore({ blockedDomains: [] });
+  const created = [];
+  global.chrome.contextMenus.create = (props) => created.push(props);
+
+  // Drive onInstalled and await it, as the runtime does. The menu create must have
+  // run by the time the handler resolves - not be left dangling in a removeAll
+  // callback the worker might outlive.
+  for (const fn of installedListeners) await fn({ reason: "install" });
+
+  assert.equal(created.length, 1, "one menu item created");
+  assert.equal(created[0].id, "block-current-site");
+  assert.deepEqual(created[0].contexts, ["page"]);
+  assert.deepEqual(created[0].documentUrlPatterns, ["http://*/*", "https://*/*"]);
 });

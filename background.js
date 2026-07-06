@@ -30,6 +30,10 @@ const SWEEP_REQUEST_KEY = "sweepRequest";
 const SWEEP_ALARM = "history-filter-resweep";
 const SWEEP_PERIOD_MINUTES = 30;
 const SEARCH_PAGE_SIZE = 1000;
+// Id of the page context-menu item that blocks the current site. Also the command
+// name declared in manifest.json for the keyboard shortcut.
+const BLOCK_MENU_ID = "block-current-site";
+const BLOCK_COMMAND = "block-current-site";
 
 // Upper bound for the first history query. history.search excludes rows at or
 // after endTime, and a visit can carry a future lastVisitTime (system clock
@@ -55,6 +59,67 @@ async function getNormalizedDomains() {
   }
   const list = Array.isArray(stored[STORAGE_KEY]) ? stored[STORAGE_KEY] : [];
   return list.map(normalizeDomain).filter(Boolean);
+}
+
+// Serialize the worker's own list writes (the keyboard shortcut and the context
+// menu) through one chain, the same guard the options page uses for its writes: a
+// slower earlier write can never land after a newer one and overwrite it, so two
+// rapid blocks both land. This chain orders only the writes made here in the
+// worker; coordinating with the popup's and options page's own writes is the
+// separate, pre-existing cross-context race tracked in issue #12.
+let blockQueue = Promise.resolve();
+
+// A strictly increasing sweep-request token. storage.onChanged fires only when the
+// value actually changes, so two blocks in the same millisecond writing a bare
+// Date.now() would collide and the second would not trigger a sweep. Seeding from
+// the clock keeps the value a meaningful timestamp; the +1 floor guarantees each
+// worker write differs from the last, so every back-to-back block sweeps.
+let lastSweepToken = 0;
+function nextSweepToken() {
+  lastSweepToken = Math.max(Date.now(), lastSweepToken + 1);
+  return lastSweepToken;
+}
+
+// Add a page's domain to the blocked list and request a history sweep. This is the
+// one routine behind both the keyboard shortcut and the context menu, so the add
+// logic lives in exactly one place and reuses domain.js the way the popup does.
+// blockableHost returns "" for anything that is not an ordinary http(s) page, so
+// this no-ops on chrome://, edge://, about: and other unfilterable URLs. A host
+// already covered by the list (suffix-aware, via hostIsBlocked) is left as-is.
+// Returns a promise resolving to what happened, so a caller or test can react.
+function blockUrlDomain(url) {
+  const host = blockableHost(url);
+  if (!host) return Promise.resolve({ status: "unblockable", host: "" });
+  blockQueue = blockQueue.then(async () => {
+    let list = [];
+    try {
+      const stored = await chrome.storage.local.get(STORAGE_KEY);
+      if (Array.isArray(stored[STORAGE_KEY])) list = stored[STORAGE_KEY];
+    } catch {
+      return { status: "error", host };
+    }
+    // Suffix-aware skip, the same one the popup applies before it offers the
+    // block: if a parent domain already on the list covers this host (reddit.com
+    // covers old.reddit.com), the sweep already removes it, so adding the
+    // subdomain would be redundant. This also covers the exact-match case.
+    if (hostIsBlocked(host, partitionDomains(list).domains)) {
+      return { status: "covered", host };
+    }
+    const { list: next, status } = addBlockedDomain(list, host);
+    if (status !== "added") return { status, host };
+    try {
+      await chrome.storage.local.set({ [STORAGE_KEY]: next });
+      // Ask the worker to clear existing history for the just-added domain. A
+      // strictly increasing token (not a bare Date.now()) so two same-millisecond
+      // blocks each fire storage.onChanged. The list write above lands first (this
+      // chain is serialized), so the sweep reads the new list.
+      await chrome.storage.local.set({ [SWEEP_REQUEST_KEY]: nextSweepToken() });
+    } catch {
+      return { status: "error", host };
+    }
+    return { status, host };
+  });
+  return blockQueue;
 }
 
 async function deleteUrlIfBlocked(url, domains, visitCount) {
@@ -167,6 +232,24 @@ function ensureSweepAlarm() {
   chrome.alarms.create(SWEEP_ALARM, { periodInMinutes: SWEEP_PERIOD_MINUTES });
 }
 
+// Register the "block this domain" page context-menu item. removeAll first so a
+// reinstall or update never trips over a duplicate id. documentUrlPatterns limits
+// the item to http(s) pages, so it does not even appear on chrome:// or edge://
+// pages; the keyboard shortcut, which can fire anywhere, is guarded separately in
+// blockUrlDomain. Returns a promise (awaited from onInstalled) so the create call
+// is part of the event's lifetime - otherwise the worker could shut down between
+// removeAll and create and the menu would be missing until the next update.
+function ensureBlockMenu() {
+  return chrome.contextMenus.removeAll().then(() => {
+    chrome.contextMenus.create({
+      id: BLOCK_MENU_ID,
+      title: "Block this domain in LinkSweepr",
+      contexts: ["page"],
+      documentUrlPatterns: ["http://*/*", "https://*/*"],
+    });
+  });
+}
+
 // --- Event registration (synchronous, top level) ---
 //
 // The addListener calls run synchronously so the MV3 service worker can be woken
@@ -194,9 +277,12 @@ if (chrome.webNavigation) {
   chrome.webNavigation.onReferenceFragmentUpdated.addListener(onSpaNavigation);
 }
 
-// Clear existing history and arm the backstop alarm on install and startup.
+// Clear existing history, arm the backstop alarm, and register the context-menu
+// item on install and update. The menu persists across worker restarts, so only
+// install/update needs to (re)create it.
 chrome.runtime.onInstalled.addListener(async () => {
   ensureSweepAlarm();
+  await ensureBlockMenu();
   await sweep();
 });
 chrome.runtime.onStartup.addListener(async () => {
@@ -231,6 +317,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// Keyboard shortcut (manifest commands): block the active tab's domain. activeTab
+// is granted for the current tab when the user invokes the command, so the query
+// can read its url without the broad "tabs" permission.
+if (chrome.commands) {
+  chrome.commands.onCommand.addListener(async (command) => {
+    if (command !== BLOCK_COMMAND) return;
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url) await blockUrlDomain(tab.url);
+  });
+}
+
+// Right-click page menu: block the domain of the page the menu was opened on.
+// info.pageUrl is the page's url; fall back to the tab's url just in case.
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId !== BLOCK_MENU_ID) return;
+  const url = info.pageUrl || (tab && tab.url) || "";
+  if (url) await blockUrlDomain(url);
+});
+
 // Exposed for Node unit tests. In the browser service worker `module` is
 // undefined, so this block is skipped and has no effect on the extension.
 if (typeof module !== "undefined" && module.exports) {
@@ -245,5 +350,6 @@ if (typeof module !== "undefined" && module.exports) {
     resetSweptCount: () => {
       sweptCount = 0;
     },
+    blockUrlDomain,
   };
 }
