@@ -38,6 +38,14 @@ const SEARCH_PAGE_SIZE = 1000;
 // This is the maximum ECMAScript time value; no visit can exceed it.
 const MAX_HISTORY_TIME = 8640000000000000;
 
+// How many history entries this worker has removed since it started, shown in the
+// popup as visible feedback that the extension is working. In-memory only and
+// deliberately never written to storage: it may reset when the MV3 service worker
+// is torn down, which is acceptable and preferable to persisting anything. It
+// holds only an integer - no URLs, domains, or timestamps - so it keeps the
+// listing's promise that nothing beyond the domain list is stored.
+let sweptCount = 0;
+
 async function getNormalizedDomains() {
   let stored;
   try {
@@ -49,12 +57,18 @@ async function getNormalizedDomains() {
   return list.map(normalizeDomain).filter(Boolean);
 }
 
-async function deleteUrlIfBlocked(url, domains) {
+async function deleteUrlIfBlocked(url, domains, visitCount) {
   if (!url) return;
   try {
     const list = domains || (await getNormalizedDomains());
     if (list.length && urlIsBlocked(url, list)) {
       await chrome.history.deleteUrl({ url });
+      // deleteUrl removes every visit to the URL, so count them all when the
+      // caller knows the count (onVisited provides it, and can carry older visits
+      // an earlier sweep missed or that were later synced in). A same-document
+      // SPA navigation is a single visit, so it omits the count and falls back to
+      // one.
+      sweptCount += visitCount > 0 ? visitCount : 1;
     }
   } catch {
     // Storage or history can fail transiently (or the URL is already gone);
@@ -117,6 +131,12 @@ async function sweepDomain(domain, domains) {
       if (urlIsBlocked(item.url, domains)) {
         try {
           await chrome.history.deleteUrl({ url: item.url });
+          // deleteUrl removes every visit to this URL at once, and search returns
+          // one row per URL, so count the visits that row carried rather than one
+          // per URL. This keeps the metric consistent with the live path, which
+          // counts one per onVisited visit. visitCount is absent in some rows, so
+          // fall back to one.
+          sweptCount += item.visitCount > 0 ? item.visitCount : 1;
         } catch {
           // Ignore; the row may already be gone.
         }
@@ -157,9 +177,10 @@ function ensureSweepAlarm() {
 // rejection, and the periodic sweep is the backstop for any work a worker
 // teardown still drops.
 
-// Ordinary visits and redirect hops.
+// Ordinary visits and redirect hops. Pass the row's visit count so the session
+// counter reflects every visit deleteUrl removes, not just the one that fired.
 chrome.history.onVisited.addListener(async (item) => {
-  await deleteUrlIfBlocked(item.url);
+  await deleteUrlIfBlocked(item.url, undefined, item.visitCount);
 });
 
 // Same-document SPA navigations, which persist in history but may not fire
@@ -199,6 +220,17 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === SWEEP_ALARM) await sweep();
 });
 
+// The popup asks for the session sweep count to show visible feedback. The reply
+// is synchronous, so this listener does not return true (no open response port).
+// Sending the message is also what wakes a torn-down worker; the count it reports
+// is therefore the total since that wake, which is the intended, non-persistent
+// behavior.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message && message.type === "getSweepCount") {
+    sendResponse({ count: sweptCount });
+  }
+});
+
 // Exposed for Node unit tests. In the browser service worker `module` is
 // undefined, so this block is skipped and has no effect on the extension.
 if (typeof module !== "undefined" && module.exports) {
@@ -208,5 +240,10 @@ if (typeof module !== "undefined" && module.exports) {
     urlIsBlocked,
     sweep,
     sweepDomain,
+    deleteUrlIfBlocked,
+    getSweptCount: () => sweptCount,
+    resetSweptCount: () => {
+      sweptCount = 0;
+    },
   };
 }

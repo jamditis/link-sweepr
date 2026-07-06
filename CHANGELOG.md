@@ -14,6 +14,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   a query of `reddit.com` surfaces `old.reddit.com` the same way the sweep covers
   it (and does not surface the lookalike `notreddit.com`). Filtering and sorting
   are display-only and never change the stored list.
+- Popup: a session sweep counter showing how many history entries have been
+  removed since the service worker started, as visible feedback that the
+  extension is working. The count is held in memory in the worker and is never
+  persisted (it may reset when the worker is torn down, which is acceptable), so
+  no URLs, domains, or timestamps are stored as a result.
 
 ## [1.1.0] - 2026-07-02
 

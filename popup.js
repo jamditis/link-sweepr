@@ -8,6 +8,8 @@ const SWEEP_REQUEST_KEY = "sweepRequest";
 const el = (id) => document.getElementById(id);
 const countEl = el("count");
 const countLabelEl = el("count-label");
+const sweptEl = el("swept");
+const sweptLabelEl = el("swept-label");
 const hostEl = el("host");
 const blockBtn = el("block");
 const statusEl = el("status");
@@ -41,9 +43,26 @@ function setCount(list) {
   countLabelEl.textContent = n === 1 ? "domain filtered" : "domains filtered";
 }
 
+// Ask the service worker how many entries it has removed since it started, so the
+// popup gives visible feedback. The count is in-memory in the worker and never
+// persisted; sending this message also wakes a torn-down worker, so it reports
+// the total since that wake. A failure leaves the shown value unchanged.
+async function renderSweptCount() {
+  try {
+    const res = await chrome.runtime.sendMessage({ type: "getSweepCount" });
+    const n = res && typeof res.count === "number" ? res.count : 0;
+    sweptEl.textContent = String(n);
+    sweptLabelEl.textContent =
+      n === 1 ? "entry removed this session" : "entries removed this session";
+  } catch {
+    // Service worker unavailable; keep the current value.
+  }
+}
+
 async function render() {
   const list = await getList();
   setCount(list);
+  renderSweptCount();
 
   currentHost = blockableHost(await activeTabUrl());
   if (!currentHost) {
@@ -90,3 +109,8 @@ el("manage").addEventListener("click", () => {
 });
 
 render();
+
+// Keep the session count live while the popup stays open: a sweep triggered
+// elsewhere (a background navigation, the block above) bumps the worker's count,
+// and this refresh reflects it. The interval is torn down with the popup.
+setInterval(renderSweptCount, 1500);
