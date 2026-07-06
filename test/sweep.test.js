@@ -40,8 +40,14 @@ global.chrome = {
   alarms: { create: noop, onAlarm: { addListener: noop } },
   commands: { onCommand: { addListener: (fn) => commandListeners.push(fn) } },
   contextMenus: {
-    // MV3 returns a promise when no callback is passed; ensureBlockMenu awaits it.
-    removeAll: (cb) => (cb ? (cb(), undefined) : Promise.resolve()),
+    // Model the pre-Chrome-123 callback-only API: removeAll invokes the callback
+    // and returns undefined, never a promise. A .then()-on-the-return
+    // implementation of ensureBlockMenu would throw here, so the "install
+    // registers the menu" test below is a real regression guard for that.
+    removeAll: (cb) => {
+      if (cb) cb();
+      return undefined;
+    },
     create: noop,
     onClicked: { addListener: (fn) => menuClickListeners.push(fn) },
   },

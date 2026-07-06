@@ -239,13 +239,27 @@ function ensureSweepAlarm() {
 // blockUrlDomain. Returns a promise (awaited from onInstalled) so the create call
 // is part of the event's lifetime - otherwise the worker could shut down between
 // removeAll and create and the menu would be missing until the next update.
+//
+// removeAll is called in its callback form, not awaited as a promise:
+// contextMenus.removeAll only began returning a promise in Chrome/Edge 123, and
+// the manifest sets no minimum_chrome_version, so on an older MV3 browser the
+// no-argument call returns undefined and a .then() on it would throw and abort
+// the whole install handler (skipping the existing-history sweep too). The
+// callback form works on every version, and create() is synchronous, so the menu
+// exists by the time resolve() runs.
 function ensureBlockMenu() {
-  return chrome.contextMenus.removeAll().then(() => {
-    chrome.contextMenus.create({
-      id: BLOCK_MENU_ID,
-      title: "Block this domain in LinkSweepr",
-      contexts: ["page"],
-      documentUrlPatterns: ["http://*/*", "https://*/*"],
+  return new Promise((resolve) => {
+    chrome.contextMenus.removeAll(() => {
+      // Reading lastError clears the "unchecked runtime.lastError" warning when
+      // there was nothing to remove; nothing here needs to act on it.
+      void chrome.runtime.lastError;
+      chrome.contextMenus.create({
+        id: BLOCK_MENU_ID,
+        title: "Block this domain in LinkSweepr",
+        contexts: ["page"],
+        documentUrlPatterns: ["http://*/*", "https://*/*"],
+      });
+      resolve();
     });
   });
 }
