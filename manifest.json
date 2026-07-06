@@ -3,9 +3,18 @@
   "name": "LinkSweepr",
   "version": "1.1.0",
   "description": "Automatically removes chosen domains, all their subdomains, and every page under them from your browsing history.",
-  "permissions": ["history", "storage", "webNavigation", "alarms", "activeTab"],
+  "permissions": ["history", "storage", "webNavigation", "alarms", "activeTab", "contextMenus"],
   "background": {
     "service_worker": "background.js"
+  },
+  "commands": {
+    "block-current-site": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Block the current site in LinkSweepr"
+    }
   },
   "action": {
     "default_title": "LinkSweepr",

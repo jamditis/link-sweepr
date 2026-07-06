@@ -87,7 +87,8 @@ Edge allows up to 7 terms, each ≤30 characters. Chrome has no separate keyword
 | `storage` | Stores the user's domain list and settings in local extension storage so they persist between sessions. No data leaves the device. |
 | `webNavigation` | Detects same-page navigations inside single-page apps so a matching visit is removed the moment it is recorded, not only on a full page load. |
 | `alarms` | Schedules a periodic local sweep so any history entry that was missed is cleaned up on the device. |
-| `activeTab` | Reads only the current tab's address when the user clicks the toolbar button to block a site, which avoids requesting broad access to every website. |
+| `activeTab` | Reads only the current tab's address when the user acts to block a site (the toolbar button, the keyboard shortcut, or the right-click menu), which avoids requesting broad access to every website. |
+| `contextMenus` | Adds a single right-click "Block this domain in LinkSweepr" item on ordinary web pages so the user can block the current site without opening the popup. It only reads the address of the page the user right-clicked, and only when they choose that item. |
 
 No `host_permissions`, no `<all_urls>`, no `tabs`, and no `webRequest`. Lead the review notes with: no broad host permissions, all data stays local.
 

@@ -19,6 +19,12 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   extension is working. The count is held in memory in the worker and is never
   persisted (it may reset when the worker is torn down, which is acceptable), so
   no URLs, domains, or timestamps are stored as a result.
+- Two faster ways to block the current site, alongside the toolbar popup: a
+  keyboard shortcut (default `Ctrl+Shift+L`, `Command+Shift+L` on macOS, and
+  user-rebindable) and a right-click "Block this domain in LinkSweepr" page menu.
+  Both route through the same serialized list write and the shared suffix-aware
+  matching, and both no-op on internal pages like `chrome://` and `edge://`. Adds
+  the `contextMenus` permission.
 
 ## [1.1.0] - 2026-07-02
 
