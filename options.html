@@ -59,6 +59,23 @@
       .preview { margin-top: 16px; }
       .preview-count { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
       .preview-count b { color: var(--ink); font-weight: 600; }
+      .filter-row { display: flex; gap: 10px; margin: 0 0 10px; }
+      .filter-input {
+        flex: 1;
+        min-width: 0;
+        background: var(--panel);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 13px;
+      }
+      .filter-input:focus { outline: none; border-color: var(--accent); }
+      .filter-input::placeholder { color: var(--muted); }
+      .sort-toggle { white-space: nowrap; }
+      .sort-toggle[aria-pressed="true"] { border-color: var(--accent-2); color: var(--ink); }
+      .filter-count { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
       .chips { display: flex; flex-wrap: wrap; gap: 6px; }
       .chip {
         font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -114,6 +131,19 @@
 
       <div class="preview">
         <p class="preview-count"><b id="count">0</b> <span id="count-label">domains filtered</span></p>
+        <div class="filter-row">
+          <input
+            id="filter"
+            type="text"
+            class="filter-input"
+            placeholder="Filter domains&hellip;"
+            aria-label="Filter the domain preview"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="sort" type="button" class="sort-toggle" aria-pressed="false">Sort A&ndash;Z</button>
+        </div>
+        <p class="filter-count" id="filter-count" hidden></p>
         <div class="chips" id="chips"></div>
         <p class="warn" id="warn" hidden></p>
       </div>

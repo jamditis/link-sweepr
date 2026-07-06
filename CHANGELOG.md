@@ -7,6 +7,14 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- Options page: a filter box and an A-Z sort toggle above the domain preview.
+  Typing narrows the previewed domains using the shared `domain.js` matching, so
+  a query of `reddit.com` surfaces `old.reddit.com` the same way the sweep covers
+  it (and does not surface the lookalike `notreddit.com`). Filtering and sorting
+  are display-only and never change the stored list.
+
 ## [1.1.0] - 2026-07-02
 
 ### Added

@@ -16,6 +16,15 @@ const chipsEl = el("chips");
 const warnEl = el("warn");
 const statusEl = el("status");
 const fileInput = el("file");
+const filterEl = el("filter");
+const sortEl = el("sort");
+const filterCountEl = el("filter-count");
+
+// Preview-only view state. The filter narrows which chips show and the toggle
+// sorts them A-Z; neither touches the stored list, which is always the raw
+// textarea text saved verbatim.
+let filterQuery = "";
+let sortAsc = false;
 
 function parseLines(text) {
   return text.split("\n").map((line) => line.trim()).filter(Boolean);
@@ -30,17 +39,52 @@ function analyze(text) {
 function renderPreview() {
   const { domains, ignored } = analyze(textarea.value);
 
+  // The headline count is always the full stored list, since that is what the
+  // sweep acts on; the filter only changes which chips are shown below it.
   countEl.textContent = String(domains.length);
   countLabelEl.textContent = domains.length === 1 ? "domain filtered" : "domains filtered";
 
+  // Two-tier filter: show domains that match the way the sweep does (strict),
+  // and only fall back to a partial prefix search when nothing matched strictly.
+  // So a complete query like "reddit.com" surfaces "old.reddit.com" without also
+  // pulling in the unrelated "reddit.company", while a half-typed "github.co"
+  // still narrows to "github.com" when no strict match exists.
+  let shown = domains;
+  let partialMatch = false;
+  if (filterQuery) {
+    shown = domains.filter((domain) => domainMatchesQueryStrict(domain, filterQuery));
+    if (!shown.length) {
+      shown = domains.filter((domain) => domainMatchesQueryPartial(domain, filterQuery));
+      partialMatch = shown.length > 0;
+    }
+  }
+  if (sortAsc) shown = shown.slice().sort((a, b) => a.localeCompare(b));
+
   // Rebuild chips with createElement/textContent; never innerHTML on input text.
-  const chips = domains.map((domain) => {
+  const chips = shown.map((domain) => {
     const chip = document.createElement("span");
     chip.className = "chip";
     chip.textContent = domain;
     return chip;
   });
   chipsEl.replaceChildren(...chips);
+
+  // Only report the filtered view when a query is active and there is a list to
+  // narrow, so the hint stays quiet in the common empty/unfiltered case. When the
+  // view is the partial-search fallback, say so, so the extra matches read as
+  // "starts with" results rather than domains the sweep would cover.
+  if (filterQuery && domains.length) {
+    if (!shown.length) {
+      filterCountEl.textContent = "No domains match this filter.";
+    } else if (partialMatch) {
+      filterCountEl.textContent = `Showing ${shown.length} of ${domains.length} (partial match)`;
+    } else {
+      filterCountEl.textContent = `Showing ${shown.length} of ${domains.length}`;
+    }
+    filterCountEl.hidden = false;
+  } else {
+    filterCountEl.hidden = true;
+  }
 
   if (ignored.length) {
     warnEl.textContent = `Ignored (not a readable domain): ${ignored.join(", ")}`;
@@ -146,6 +190,18 @@ async function load() {
   textarea.value = list.join("\n");
   renderPreview();
 }
+
+// Filtering and sorting are display-only, so they re-render the preview but never
+// call save(). The stored list is untouched.
+filterEl.addEventListener("input", () => {
+  filterQuery = filterEl.value;
+  renderPreview();
+});
+sortEl.addEventListener("click", () => {
+  sortAsc = !sortAsc;
+  sortEl.setAttribute("aria-pressed", String(sortAsc));
+  renderPreview();
+});
 
 textarea.addEventListener("input", onInput);
 el("export").addEventListener("click", exportList);
