@@ -9,9 +9,11 @@ const assert = require("node:assert/strict");
 // must exist before it is required. These stubs are no-ops; the history methods
 // are replaced per test by historyStore().
 const noop = () => {};
-// Capture the worker's storage.onChanged listeners so a test can drive them and
-// assert which key triggers a sweep.
+// Capture the worker's storage.onChanged and runtime.onMessage listeners so a
+// test can drive them and assert which key triggers a sweep, and what the popup's
+// count request replies.
 const onChangedListeners = [];
+const messageListeners = [];
 global.chrome = {
   history: {
     onVisited: { addListener: noop },
@@ -25,6 +27,7 @@ global.chrome = {
   runtime: {
     onInstalled: { addListener: noop },
     onStartup: { addListener: noop },
+    onMessage: { addListener: (fn) => messageListeners.push(fn) },
   },
   storage: {
     local: { get: async () => ({}) },
@@ -69,6 +72,7 @@ function historyStore(items) {
         url: it.url,
         lastVisitTime: it.lastVisitTime,
         title: it.title,
+        visitCount: it.visitCount,
       }));
   };
   global.chrome.history.deleteUrl = async ({ url }) => {
@@ -276,4 +280,58 @@ test("only a sweepRequest change sweeps; a list write alone does not", async () 
 
   // Restore the default so later tests are unaffected.
   global.chrome.storage.local.get = async () => ({});
+});
+
+test("the session counter tracks visits removed, not just URLs", async () => {
+  bg.resetSweptCount();
+  // deleteUrl removes every visit to a URL, so a row visited several times counts
+  // for all of them; a row with no visitCount counts as one.
+  const { deleted } = historyStore([
+    { id: 1, url: "https://reddit.com/", lastVisitTime: 3000, visitCount: 4 },
+    { id: 2, url: "https://old.reddit.com/r/x", lastVisitTime: 2000 }, // no visitCount
+    { id: 3, url: "https://example.org/", lastVisitTime: 1000, visitCount: 9 }, // not blocked
+  ]);
+
+  await bg.sweep(["reddit.com"]);
+
+  assert.equal(deleted.length, 2, "two URLs removed");
+  assert.equal(bg.getSweptCount(), 5, "4 visits + 1 fallback = 5 entries counted");
+});
+
+test("a live blocked visit counts its visits, an unblocked one does not", async () => {
+  bg.resetSweptCount();
+  const { deleted } = historyStore([]); // deleteUrl records what it was asked to remove
+  global.chrome.storage.local.get = async () => ({ blockedDomains: ["reddit.com"] });
+
+  // No visit count known (an SPA navigation) falls back to one.
+  await bg.deleteUrlIfBlocked("https://old.reddit.com/r/x");
+  assert.deepEqual(deleted, ["https://old.reddit.com/r/x"]);
+  assert.equal(bg.getSweptCount(), 1);
+
+  // onVisited supplies a count, and deleteUrl removes all of those visits at once.
+  await bg.deleteUrlIfBlocked("https://reddit.com/", undefined, 3);
+  assert.equal(bg.getSweptCount(), 4, "1 + 3 visits removed");
+
+  await bg.deleteUrlIfBlocked("https://example.org/", undefined, 5); // not blocked
+  assert.equal(bg.getSweptCount(), 4, "an unblocked visit neither deletes nor counts");
+
+  global.chrome.storage.local.get = async () => ({});
+});
+
+test("getSweepCount message replies with the count; other messages are ignored", async () => {
+  bg.resetSweptCount();
+  historyStore([{ id: 1, url: "https://reddit.com/", lastVisitTime: 1000 }]);
+  await bg.sweep(["reddit.com"]);
+
+  let reply;
+  const respond = (value) => (reply = value);
+
+  for (const fn of messageListeners) fn({ type: "getSweepCount" }, {}, respond);
+  assert.deepEqual(reply, { count: 1 }, "the popup's request gets the live count");
+
+  reply = undefined;
+  for (const fn of messageListeners) fn({ type: "somethingElse" }, {}, respond);
+  assert.equal(reply, undefined, "an unrelated message draws no response");
+
+  global.chrome.history.deleteUrl = async () => {};
 });

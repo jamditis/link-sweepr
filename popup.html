@@ -31,8 +31,10 @@
         letter-spacing: 0.02em;
         margin: 0;
       }
-      .count { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+      .count { color: var(--muted); font-size: 13px; margin: 0 0 4px; }
       .count b { color: var(--ink); font-weight: 600; }
+      .swept { color: var(--muted); font-size: 12px; margin: 0 0 14px; }
+      .swept b { color: var(--ink); font-weight: 600; }
       .site {
         background: var(--panel);
         border: 1px solid var(--line);
@@ -89,6 +91,7 @@
       <h1>LinkSweepr</h1>
     </header>
     <p class="count"><b id="count">0</b> <span id="count-label">domains filtered</span></p>
+    <p class="swept"><b id="swept">0</b> <span id="swept-label">entries removed this session</span></p>
     <div class="site">
       <p class="host muted" id="host">Checking this tab&hellip;</p>
       <button id="block" disabled>Block this site</button>
