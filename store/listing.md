@@ -127,7 +127,7 @@ All paths are under `store/`.
 | Screenshot 4 | `screenshots/04-privacy.png` | 1280x800 | Both |
 | Small promo tile | `promo/promo-small-440x280.png` | 440x280 | Chrome small promo tile; Edge small promotional tile |
 | Marquee / large tile | `promo/promo-marquee-1400x560.png` | 1400x560 | Chrome marquee; Edge large promotional tile |
-| Package | `../dist/link-sweepr-1.1.0.zip` | - | Upload as the extension package |
+| Package | `../dist/link-sweepr-1.2.0.zip` | - | Upload as the extension package |
 
 Screenshot counts: Chrome takes 1 to 5, Edge takes up to 6. All four here work for both.
 
@@ -138,5 +138,5 @@ Screenshot counts: Chrome takes 1 to 5, Edge takes up to 6. All four here work f
 - The same package zip goes to both stores with no manifest edits. The manifest name and description are browser-neutral (no "Chrome" branding), which Edge requires.
 - There is no `update_url` in the manifest, which both stores require for store-hosted extensions.
 - Edge certification takes up to 7 business days. Chrome review runs from a few days to a few weeks.
-- Chrome Web Store: approved and live (v1.1.0) at `https://chrome.google.com/webstore/detail/flebgmilmmjcmkdkkemacmgkbcoholok`. The site and README buttons now point to it. Swap in the slug-based canonical URL from the developer dashboard if you prefer it.
+- Chrome Web Store: approved and live (v1.2.0) at `https://chrome.google.com/webstore/detail/flebgmilmmjcmkdkkemacmgkbcoholok`. The site and README buttons now point to it. Swap in the slug-based canonical URL from the developer dashboard if you prefer it.
 - Microsoft Edge: Edge installs Chrome Web Store extensions directly, so the CWS listing already covers Edge users, and the site presents both browsers off that one listing. A dedicated Microsoft Edge Add-ons listing is optional and can be added later for discoverability inside the Edge store; the assets in `store/` are browser-neutral and ready if you decide to submit one.
