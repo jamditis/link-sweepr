@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-06
+
 ### Added
 
 - Options page: a filter box and an A-Z sort toggle above the domain preview.
@@ -75,6 +77,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Options page for editing the domain list, stored in `chrome.storage.local`.
 - Sweep of existing history on install and on browser startup.
 
-[Unreleased]: https://github.com/jamditis/link-sweepr/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/jamditis/link-sweepr/compare/c8df6a45f222a972c9628fe89b7b53176b2f5eda...HEAD
+[1.2.0]: https://github.com/jamditis/link-sweepr/compare/v1.1.0...c8df6a45f222a972c9628fe89b7b53176b2f5eda
 [1.1.0]: https://github.com/jamditis/link-sweepr/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jamditis/link-sweepr/commit/ad8964e

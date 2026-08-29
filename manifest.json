@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkSweepr",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Automatically removes chosen domains, all their subdomains, and every page under them from your browsing history.",
   "permissions": ["history", "storage", "webNavigation", "alarms", "activeTab", "contextMenus"],
   "background": {
