@@ -68,7 +68,12 @@ rmSync(zipPath, { force: true });
 // archivers do not (Windows Compress-Archive emits backslash separators, which
 // break icon resolution and store validation).
 const zip = new AdmZip();
-zip.addLocalFolder(EXT);
+// Use explicit sorted files, fixed local DOS time, and fixed Unix file modes.
+// Directory entries are unnecessary and would carry filesystem metadata.
+for (const file of [...FILES, ...iconRefs].sort()) {
+  zip.addFile(file, readFileSync(join(EXT, file)), "", 0o644);
+  zip.getEntry(file).header.time = new Date(1980, 0, 1, 0, 0, 0);
+}
 zip.writeZip(zipPath);
 
 console.log(`Packaged ${zipName} (${FILES.length} files, ${iconRefs.size} icons) at ${zipPath}`);

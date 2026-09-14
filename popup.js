@@ -2,9 +2,6 @@
 // current tab's site in one click. Domain logic lives in domain.js (loaded
 // first); this file is the thin UI layer over it.
 const STORAGE_KEY = "blockedDomains";
-// Written after a block to ask the service worker to clear existing history for
-// the newly blocked domain (see background.js).
-const SWEEP_REQUEST_KEY = "sweepRequest";
 const el = (id) => document.getElementById(id);
 const countEl = el("count");
 const countLabelEl = el("count-label");
@@ -90,14 +87,15 @@ async function render() {
 
 blockBtn.addEventListener("click", async () => {
   if (!currentHost) return;
-  const list = await getList();
-  const { list: next, status } = addBlockedDomain(list, currentHost);
-  if (status === "added") {
-    await chrome.storage.local.set({ [STORAGE_KEY]: next });
-    await chrome.storage.local.set({ [SWEEP_REQUEST_KEY]: Date.now() });
-    statusEl.textContent = "Filtered.";
-  } else if (status === "exists") {
-    statusEl.textContent = "Already filtered.";
+  blockBtn.disabled = true;
+  try {
+    const result = await chrome.runtime.sendMessage({
+      type: "blockSite", url: "https://" + currentHost + "/",
+    });
+    statusEl.textContent = result?.status === "added" ? "Filtered." :
+      result?.status === "covered" ? "Already filtered." : "Could not save. Try again.";
+  } catch {
+    statusEl.textContent = "Could not save. Try again.";
   }
   await render();
   setTimeout(() => (statusEl.textContent = ""), 2500);

@@ -61,12 +61,7 @@ async function getNormalizedDomains() {
   return list.map(normalizeDomain).filter(Boolean);
 }
 
-// Serialize the worker's own list writes (the keyboard shortcut and the context
-// menu) through one chain, the same guard the options page uses for its writes: a
-// slower earlier write can never land after a newer one and overwrite it, so two
-// rapid blocks both land. This chain orders only the writes made here in the
-// worker; coordinating with the popup's and options page's own writes is the
-// separate, pre-existing cross-context race tracked in issue #12.
+// All domain-list mutations share the worker queue across every UI context.
 let blockQueue = Promise.resolve();
 
 // A strictly increasing sweep-request token. storage.onChanged fires only when the
@@ -118,6 +113,32 @@ function blockUrlDomain(url) {
       return { status: "error", host };
     }
     return { status, host };
+  });
+  return blockQueue;
+}
+
+// Apply only the user's edits to the latest list. A stale options page cannot
+// remove a domain that another context added after that page loaded.
+function editDomains(before, after) {
+  if (!Array.isArray(before) || !Array.isArray(after) ||
+      !before.every((value) => typeof value === "string") ||
+      !after.every((value) => typeof value === "string")) {
+    return Promise.resolve({ status: "error" });
+  }
+  blockQueue = blockQueue.then(async () => {
+    try {
+      const stored = await chrome.storage.local.get(STORAGE_KEY);
+      const current = Array.isArray(stored[STORAGE_KEY]) ? stored[STORAGE_KEY] : [];
+      // Keep the edited order, but do not resurrect an unchanged line that
+      // another context removed. Preserve additions absent from this edit's base.
+      const edited = after.filter((value) => current.includes(value) || !before.includes(value));
+      const concurrent = current.filter((value) => !before.includes(value) && !after.includes(value));
+      const next = [...new Set([...edited, ...concurrent])];
+      await chrome.storage.local.set({ [STORAGE_KEY]: next });
+      return { status: "saved" };
+    } catch {
+      return { status: "error" };
+    }
   });
   return blockQueue;
 }
@@ -320,14 +341,20 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === SWEEP_ALARM) await sweep();
 });
 
-// The popup asks for the session sweep count to show visible feedback. The reply
-// is synchronous, so this listener does not return true (no open response port).
+// The popup count reply is synchronous. List mutations keep the response port
+// open until the worker has saved the change.
 // Sending the message is also what wakes a torn-down worker; the count it reports
 // is therefore the total since that wake, which is the intended, non-persistent
 // behavior.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === "getSweepCount") {
     sendResponse({ count: sweptCount });
+  } else if (message && message.type === "blockSite") {
+    blockUrlDomain(message.url).then(sendResponse);
+    return true;
+  } else if (message && message.type === "editDomains") {
+    editDomains(message.before, message.after).then(sendResponse);
+    return true;
   }
 });
 
@@ -365,5 +392,6 @@ if (typeof module !== "undefined" && module.exports) {
       sweptCount = 0;
     },
     blockUrlDomain,
+    editDomains,
   };
 }

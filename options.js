@@ -94,25 +94,37 @@ function renderPreview() {
   }
 }
 
-// Persist on every edit. Writing immediately (rather than on a debounce) means no
-// edit can be lost by closing the tab. Writes are serialized through one queue so
-// a slower earlier write can never land after a newer one and overwrite it: each
-// call captures the current text and chains an ordered write, and the returned
-// promise resolves once that write completes.
+// Keep edits ordered in this page; the worker serializes all contexts. The
+// acknowledged base lets a failed save be retried by the next edit.
 let saveQueue = Promise.resolve();
+let editBase = [];
+let pendingSaves = 0;
+let hasUnsavedEdits = false;
+let refreshVersion = 0;
+let loaded = false;
 function save() {
-  const value = textarea.value;
+  const list = parseLines(textarea.value.toLowerCase());
+  pendingSaves += 1;
+  hasUnsavedEdits = true;
+  refreshVersion += 1;
   saveQueue = saveQueue.then(async () => {
-    const list = parseLines(value.toLowerCase());
     try {
-      await chrome.storage.local.set({ [STORAGE_KEY]: list });
+      const result = await chrome.runtime.sendMessage({
+        type: "editDomains", before: editBase, after: list,
+      });
+      if (result?.status !== "saved") throw new Error("Save failed");
+      editBase = list;
+      statusEl.textContent = "Saved.";
     } catch {
-      statusEl.textContent = "Could not save. Check extension storage.";
+      statusEl.textContent = "Could not save. Edit the list to retry.";
       return;
+    } finally {
+      pendingSaves -= 1;
     }
-    const count = analyze(value).domains.length;
-    statusEl.textContent =
-      count === 1 ? "Saved. 1 domain filtered." : `Saved. ${count} domains filtered.`;
+    if (!pendingSaves) {
+      hasUnsavedEdits = false;
+      await load();
+    }
   });
   return saveQueue;
 }
@@ -171,6 +183,7 @@ function exportList() {
 }
 
 async function importList() {
+  if (textarea.disabled) return;
   const file = fileInput.files[0];
   if (!file) return;
   const text = await file.text();
@@ -185,11 +198,38 @@ async function importList() {
 }
 
 async function load() {
-  const stored = await chrome.storage.local.get(STORAGE_KEY);
-  const list = Array.isArray(stored[STORAGE_KEY]) ? stored[STORAGE_KEY] : [];
-  textarea.value = list.join("\n");
-  renderPreview();
+  if (pendingSaves || hasUnsavedEdits) return;
+  const version = ++refreshVersion;
+  try {
+    const stored = await chrome.storage.local.get(STORAGE_KEY);
+    if (pendingSaves || version !== refreshVersion) return;
+    const list = Array.isArray(stored[STORAGE_KEY]) ? stored[STORAGE_KEY] : [];
+    let value = list.join("\n");
+    if (loaded) {
+      const removed = new Set(editBase.filter((line) => !list.includes(line)));
+      const added = list.filter((line) => !editBase.includes(line));
+      value = textarea.value.split("\n")
+        .filter((line) => !removed.has(line.trim().toLowerCase())).join("\n");
+      if (added.length) value += (value ? "\n" : "") + added.join("\n");
+    }
+    if (textarea.value !== value) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      textarea.value = value;
+      if (loaded) textarea.setSelectionRange(start, end);
+    }
+    editBase = list;
+    loaded = true;
+    textarea.disabled = false;
+    renderPreview();
+  } catch {
+    statusEl.textContent = "Could not load the domain list.";
+  }
 }
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes[STORAGE_KEY]) load();
+});
 
 // Filtering and sorting are display-only, so they re-render the preview but never
 // call save(). The stored list is untouched.
@@ -210,4 +250,5 @@ fileInput.addEventListener("change", importList);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) flushPendingSweep();
 });
+textarea.disabled = true;
 load();

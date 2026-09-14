@@ -503,3 +503,54 @@ test("install registers the context-menu item within the event lifetime", async 
   assert.deepEqual(created[0].contexts, ["page"]);
   assert.deepEqual(created[0].documentUrlPatterns, ["http://*/*", "https://*/*"]);
 });
+
+test('options edits and popup blocks preserve concurrent additions', async () => {
+  let list = ['old.example'];
+  chrome.storage.local.get = async () => ({ blockedDomains: [...list] });
+  chrome.storage.local.set = async (values) => {
+    await new Promise(resolve => setImmediate(resolve));
+    if (values.blockedDomains) list = [...values.blockedDomains];
+  };
+  const send = (message) => new Promise(resolve => {
+    const keepAlive = messageListeners[0](message, {}, resolve);
+    assert.equal(keepAlive, true);
+  });
+  const results = await Promise.all([
+    send({ type: 'blockSite', url: 'https://popup.example/page' }),
+    send({ type: 'editDomains', before: ['old.example'], after: ['edited.example'] }),
+    bg.blockUrlDomain('https://shortcut.example/'),
+  ]);
+  assert.deepEqual(results.map(result => result.status), ['added', 'saved', 'added']);
+  assert.deepEqual(list, ['edited.example', 'popup.example', 'shortcut.example']);
+});
+
+test('list queue recovers after a failed options write', async () => {
+  let list = [];
+  let fail = true;
+  chrome.storage.local.get = async () => ({ blockedDomains: [...list] });
+  chrome.storage.local.set = async (values) => {
+    if (fail) { fail = false; throw new Error('Storage unavailable'); }
+    if (values.blockedDomains) list = [...values.blockedDomains];
+  };
+  assert.equal((await bg.editDomains([], ['one.example'])).status, 'error');
+  assert.equal((await bg.blockUrlDomain('https://two.example')).status, 'added');
+  assert.deepEqual(list, ['two.example']);
+});
+
+
+test('options saves persist edited order and preserve concurrent changes', async () => {
+  let list = ['first.example', 'last.example', 'external.example'];
+  chrome.storage.local.get = async () => ({ blockedDomains: [...list] });
+  chrome.storage.local.set = async values => {
+    if (values.blockedDomains) list = [...values.blockedDomains];
+  };
+  await bg.editDomains(['first.example', 'last.example'], ['last.example', 'first.example']);
+  assert.deepEqual((await chrome.storage.local.get()).blockedDomains,
+    ['last.example', 'first.example', 'external.example']);
+  await bg.editDomains(list, ['edited.example', 'first.example', 'external.example']);
+  assert.deepEqual((await chrome.storage.local.get()).blockedDomains,
+    ['edited.example', 'first.example', 'external.example']);
+  // A stale editor leaves a concurrently removed line removed.
+  await bg.editDomains(['gone.example', ...list], ['gone.example', ...list]);
+  assert.ok(!list.includes('gone.example'));
+});
