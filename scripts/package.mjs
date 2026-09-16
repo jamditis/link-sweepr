@@ -72,7 +72,11 @@ const zip = new AdmZip();
 // Directory entries are unnecessary and would carry filesystem metadata.
 for (const file of [...FILES, ...iconRefs].sort()) {
   zip.addFile(file, readFileSync(join(EXT, file)), "", 0o644);
-  zip.getEntry(file).header.time = new Date(1980, 0, 1, 0, 0, 0);
+  const header = zip.getEntry(file).header;
+  header.time = new Date(1980, 0, 1, 0, 0, 0);
+  // Unix + zip spec 2.0. adm-zip otherwise writes a host-specific "version
+  // made by" field, so Windows and Linux archives would not hash the same.
+  header.made = 0x0314;
 }
 zip.writeZip(zipPath);
 

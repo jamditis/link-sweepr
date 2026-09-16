@@ -29,6 +29,7 @@ test('packages are byte-identical across source timestamps and timezones', () =>
     assert.ok(entries.every(entry => !entry.isDirectory));
     for (const entry of entries) {
       assert.equal((entry.attr >>> 16) & 0o777, 0o644);
+      assert.equal(entry.header.made, 0x0314);
       assert.deepEqual(entry.getData(), fs.readFileSync(path.join(tmp, entry.entryName)));
     }
   } finally {
