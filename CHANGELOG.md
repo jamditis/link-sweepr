@@ -7,6 +7,17 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Changed
+
+- Domain-list writes from the popup, options page, keyboard shortcut, and
+  context menu now go through one serialized worker queue, so a save in one
+  context cannot drop a domain another context just added.
+- `npm run package` writes ZIP entries with a fixed timestamp, mode, and
+  sorted file list, so two unchanged builds produce the same archive hash.
+- Development tooling: `adm-zip` 0.6.1 and compatible lockfile upgrades.
+  `addons-linter` still depends on a vulnerable `image-size`; forcing an
+  older linter is worse than leaving that path.
+
 ## [1.2.0] - 2026-07-06
 
 ### Added

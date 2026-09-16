@@ -93,3 +93,7 @@ Edge. Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 ## License
 
 [MIT](LICENSE) (c) 2026 Joe Amditis.
+
+## Maintenance
+
+Current work and issue status: [link-sweepr project](https://github.com/users/jamditis/projects/19).

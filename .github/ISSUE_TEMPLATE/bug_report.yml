@@ -14,7 +14,7 @@ body:
     attributes:
       label: LinkSweepr version
       description: Shown on the extensions page (edge://extensions or chrome://extensions).
-      placeholder: "1.1.0"
+      placeholder: "1.2.0"
     validations:
       required: true
   - type: dropdown
