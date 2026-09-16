@@ -197,6 +197,8 @@ async function importList() {
   fileInput.value = ""; // reset so re-importing the same file fires change again
 }
 
+let loadAttempts = 0;
+
 async function load() {
   if (pendingSaves || hasUnsavedEdits) return;
   const version = ++refreshVersion;
@@ -220,10 +222,15 @@ async function load() {
     }
     editBase = list;
     loaded = true;
+    loadAttempts = 0;
     textarea.disabled = false;
     renderPreview();
   } catch {
     statusEl.textContent = "Could not load the domain list.";
+    if (!loaded && loadAttempts < 5) {
+      loadAttempts += 1;
+      setTimeout(load, 500 * loadAttempts);
+    }
   }
 }
 
