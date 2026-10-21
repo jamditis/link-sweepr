@@ -14,6 +14,6 @@
   "devDependencies": {
     "addons-linter": "10.7.0",
     "adm-zip": "^0.6.1",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.5"
   }
 }
